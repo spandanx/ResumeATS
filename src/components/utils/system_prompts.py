@@ -35,19 +35,7 @@ You are a data extractor and rating agent for education information.
 4. Duration: Duration or timeline of the education
 """
 
-# class Candidate(BaseModel):
-#     name: str = Field(description="Name of the person, return 'NOT FOUND' if not found", default="NOT FOUND")
-#     contact_number: str = Field(description="Contact number of the person, return 'NOT FOUND' if not found", default="NOT FOUND")
-#     email_id: str = Field(description="Email address of the person, return 'NOT FOUND' if not found", default="NOT FOUND")
-#     linkedin_profile_link: str = Field(description="link to the LinkedIn profile of the person, return 'NOT FOUND' if not found", default="NOT FOUND")
-#     github_profile_link: str = Field(description="link to the Github profile of the person, return 'NOT FOUND' if not found", default="NOT FOUND")
-
-# class Education(BaseModel):
-#     institution_name: str = Field(description="Name of the institution/college/school, return 'NOT FOUND' if not found")
-#     marks: str = Field(description="Marks/CGPA received from the institution/college/school, return 'NOT FOUND' if not found")
-#     location: str = Field(description="Location of the institution/college/school, return 'NOT FOUND' if not found")
-#     duration: str = Field(description="Duration or timeline of the education, return 'NOT FOUND' if not found")
-project_system_message = """
+company_project_system_message = """
 You are a data extractor and rating agent for company project information.
 
 ** RESPONSIBILITIES ** 
@@ -66,14 +54,6 @@ You are a data extractor and rating agent for company project information.
 4. Technology: Duration or timeline of the education
 5. Duration: Duration or timeline of the project
 """
-
-
-# class Project(BaseModel):
-#     project_name: str = Field(description="Name of the project, return 'NOT FOUND' if not found")
-#     project_description: str = Field(description="Short description of the project, return 'NOT FOUND' if not found")
-#     complete_description: List[str] = Field(description="Complete descriptions of the project, return empty list is not found")
-#     technology: List[str] = Field(description="Technologies, tools or softwares used in the project, return empty list is not found")
-#     duration: str = Field(description="Duration or timeline of the project, return 'NOT FOUND' if not found")
 
 personal_project_system_message = """
 You are a data extractor and rating agent for personal project information.
@@ -115,13 +95,6 @@ You are a data extractor and rating agent for experience information.
 5. Duration: Duration or timeline for the experience in the company
 """
 
-# class Experience(BaseModel):
-#     company_name: str = Field(description="Name of the company the person worked with, return 'NOT FOUND' if not found")
-#     designation: str = Field(description="Designation name for the person in the company, return 'NOT FOUND' if not found")
-#     contributions: List[str] = Field(description="contributions or works done in the project, return empty list is not found")
-#     technology: List[str] = Field(description="Technologies or tools or softwares used in the company, return empty list is not found")
-#     duration: str = Field(description="Duration or timeline for the experience in the company, return 'NOT FOUND' if not found")
-
 certification_system_message = """
 You are a data extractor and rating agent.
 
@@ -138,9 +111,3 @@ You are a data extractor and rating agent.
 2. Certification Authority: Name of the certification authority or company
 3. Duration: Duration or timeline of the certification
 """
-
-
-# class Certification(BaseModel):
-#     certification_name: List[str] = Field(description="Name of the certification, return empty list is not found")
-#     certification_authority: List[str] = Field(description="Name of the certification authority or company, return empty list is not found")
-#     duration: str = Field(description="Duration or timeline of the certification, return 'NOT FOUND' if not found")
