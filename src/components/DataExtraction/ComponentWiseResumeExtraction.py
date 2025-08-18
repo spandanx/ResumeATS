@@ -54,57 +54,44 @@ class ComponentWiseDataExtraction:
             response_format=Certification
         )
 
-    async def extract_candidate_info(self, task):
-        agent = AssistantAgent(
+        self.candidateDataExtractorAgent = AssistantAgent(
             name="CandidateDataExtractor",
             description="An Agent for extracting the candidate information from the resume",
             model_client=self.candidate_model_client,
             system_message=candidate_system_message
         )
-        return await agent.run(task = task)
 
-    async def extract_education_info(self, task):
-        agent = AssistantAgent(
+        self.educationDataExtractorAgent = AssistantAgent(
             name="EducationDataExtractor",
             description="An Agent for extracting the education information from the resume",
             model_client=self.education_model_client,
             system_message=education_system_message
         )
-        return await agent.run(task = task)
 
-    async def extract_company_projects_info(self, task):
-        agent = AssistantAgent(
+        self.companyProjectDataExtractorAgent = AssistantAgent(
             name="CompanyProjectDataExtractor",
             description="An Agent for extracting the company project information from the resume",
             model_client=self.project_model_client,
             system_message=company_project_system_message
         )
-        return await agent.run(task = task)
 
-    async def extract_personal_projects_info(self, task):
-        agent = AssistantAgent(
+        self.personalProjectDataExtractorAgent = AssistantAgent(
             name="PersonalProjectDataExtractor",
             description="An Agent for extracting the personal project information from the resume",
             model_client=self.project_model_client,
             system_message=personal_project_system_message
         )
-        return await agent.run(task = task)
 
-    async def extract_experience_info(self, task):
-        agent = AssistantAgent(
+        self.experienceDataExtractorAgent = AssistantAgent(
             name="ExperienceDataExtractor",
             description="An Agent for extracting the experience information from the resume",
             model_client=self.experience_model_client,
             system_message=experience_system_message
         )
-        return await agent.run(task = task)
 
-    async def extract_certification_info(self, task):
-        agent = AssistantAgent(
+        self.certificationDataExtractorAgent = AssistantAgent(
             name="CertificationDataExtractor",
             description="An Agent for extracting the certification information from the resume, return an empty sting if not found",
             model_client=self.certification_model_client,
             system_message=certification_system_message
         )
-        return await agent.run(task = task)
-
