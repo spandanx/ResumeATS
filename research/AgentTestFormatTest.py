@@ -28,7 +28,7 @@ planning_agent = AssistantAgent(
     description="An Agent for performing math operations",
     model_client=model_client,
     system_message="""
-    Your are Math agent.
+    Your are Math agents.
     Your job is to detect the number to be used in the operation and the type of the operation
 
     After the tasks is complete, end with "TERMINATE".

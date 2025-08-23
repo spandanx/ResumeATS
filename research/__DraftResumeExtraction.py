@@ -169,13 +169,13 @@ class DataExtraction:
     """
 
     # async def complete_resume_rating(self):
-    #     agent = AssistantAgent(
+    #     agents = AssistantAgent(
     #         name="ResumeRater",
     #         description="An Agent for analysing resume and providing an overall rating along with component wise rating",
     #         model_client=self.model_client,
     #         system_message=candidate_system_message
     #     )
-    #     return await agent.run(task=task)
+    #     return await agents.run(task=task)
 
     async def extract_candidate_info(self):
         agent = AssistantAgent(
@@ -188,49 +188,49 @@ class DataExtraction:
 
 
     # async def extract_education_info(self):
-    #     agent = AssistantAgent(
+    #     agents = AssistantAgent(
     #         name="EducationDataExtractor",
     #         description="An Agent for extracting the education information from the resume",
     #         model_client=self.model_client,
     #         system_message=education_system_message
     #     )
-    #     self.education_info_summary = await agent.run()
+    #     self.education_info_summary = await agents.run()
     #
     # async def extract_company_projects_info(self):
-    #     agent = AssistantAgent(
+    #     agents = AssistantAgent(
     #         name="CompanyProjectDataExtractor",
     #         description="An Agent for extracting the company project information from the resume",
     #         model_client=self.model_client,
     #         system_message=project_system_message
     #     )
-    #     self.company_project_info_summary = await agent.run()
+    #     self.company_project_info_summary = await agents.run()
     #
     # async def extract_personal_projects_info(self):
-    #     agent = AssistantAgent(
+    #     agents = AssistantAgent(
     #         name="PersonalProjectDataExtractor",
     #         description="An Agent for extracting the personal project information from the resume",
     #         model_client=self.model_client,
     #         system_message=personal_project_system_message
     #     )
-    #     self.personal_project_info_summary = await agent.run()
+    #     self.personal_project_info_summary = await agents.run()
     #
     # async def extract_experience_info(self):
-    #     agent = AssistantAgent(
+    #     agents = AssistantAgent(
     #         name="ExperienceDataExtractor",
     #         description="An Agent for extracting the experience information from the resume",
     #         model_client=self.model_client,
     #         system_message=experience_system_message
     #     )
-    #     self.experience_info_summary = await agent.run()
+    #     self.experience_info_summary = await agents.run()
     #
     # async def extract_certification_info(self):
-    #     agent = AssistantAgent(
+    #     agents = AssistantAgent(
     #         name="CertificationDataExtractor",
     #         description="An Agent for extracting the experience information from the resume",
     #         model_client=self.model_client,
     #         system_message=certification_system_message
     #     )
-    #     self.certifications_info_summary = await agent.run()
+    #     self.certifications_info_summary = await agents.run()
 
     def executor_(self):
         with ThreadPoolExecutor() as executor:

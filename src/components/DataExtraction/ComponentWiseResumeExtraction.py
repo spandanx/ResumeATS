@@ -13,42 +13,42 @@ class ComponentWiseDataExtraction:
     def __init__(self, api_key):
 
         self.candidate_model_client = OpenAIChatCompletionClient(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             api_key=api_key,
             response_format=Candidate
         )
 
         self.education_model_client = OpenAIChatCompletionClient(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             api_key=api_key,
             response_format=Education
         )
 
         self.project_model_client = OpenAIChatCompletionClient(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             api_key=api_key,
             response_format=Project
         )
 
         self.experience_model_client = OpenAIChatCompletionClient(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             api_key=api_key,
             response_format=Experience
         )
 
         self.experience_model_client = OpenAIChatCompletionClient(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             api_key=api_key,
             response_format=Experience
         )
 
         self.certification_model_client = OpenAIChatCompletionClient(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             api_key=api_key,
             response_format=Certification

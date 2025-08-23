@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Optional
 from pydantic import Field, BaseModel
 
 class Candidate(BaseModel):
     name: str = Field(description="Name of the person, return 'NOT FOUND' if not found")
-    contact_number: str = Field(description="Contact number of the person, return 'NOT FOUND' if not found")
+    contact_number: Optional[str] = Field(description="Contact number of the person, return 'NOT FOUND' if not found")
     email_id: str = Field(description="Email address of the person, return 'NOT FOUND' if not found")
     linkedin_profile_link: str = Field(description="Link to the LinkedIn profile of the person, return 'NOT FOUND' if not found")
     github_profile_link: str = Field(description="Link to the Github profile of the person, return 'NOT FOUND' if not found")
@@ -44,7 +44,3 @@ class Resume(BaseModel):
     experience: List[Experience] = Field(description="list of the company experiences available in the resume, return empty list if not found")
     achievements: List[str] = Field(description="Achievements made or reward received during working in companies, return empty list if not found")
     certifications: List[Certification] = Field(description="List of the certifications, return empty list if not found")
-
-class A:
-    def __init__(self, num):
-        self.num = num

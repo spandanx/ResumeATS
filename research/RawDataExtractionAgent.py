@@ -1,4 +1,7 @@
-from autogen_agentchat.agents import AssistantAgent, SocietyOfMindAgent
+from typing import Sequence
+
+from autogen_agentchat.agents import AssistantAgent, SocietyOfMindAgent, UserProxyAgent
+from autogen_agentchat.messages import BaseAgentEvent, BaseChatMessage
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.conditions import TextMentionTermination, MaxMessageTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
@@ -6,11 +9,11 @@ from autogen_agentchat.ui import Console
 
 import asyncio
 import sys
-sys.path.append("..")
+sys.path.append("../src/components")
 
 # from DataExtraction.CompleteResumeExtraction import CompleteDataExtraction
 from DataExtraction.ComponentWiseResumeExtraction import ComponentWiseDataExtraction
-from model.ResumeModel import Resume
+from model.ResumeModel import Resume, Candidate
 
 from dotenv import load_dotenv
 import os
@@ -23,39 +26,61 @@ class ResumeHandler:
 
         self.model_client = OpenAIChatCompletionClient(
             model="gpt-4o",
-            api_key=os.getenv('OPEN_API_KEY')
+            api_key=os.getenv('OPEN_API_KEY'),
+            # response_format=Resume
         )
         self.model_resume_client = OpenAIChatCompletionClient(
-            model="gpt-4o-mini",
-            api_key=os.getenv('OPEN_API_KEY'),
+            model="gemini-2.5-flash",
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            api_key=os.getenv('GOOGLE_API_KEY'),
             response_format=Resume
         )
 
+        self.candidate_scorer = UserProxyAgent(
+            name="candidateDataScorer",
+            input_func=self.candidate_scorer_custom_function,
+            # human_input_mode="NEVER",  # Set to NEVER for automatic function execution
+            description="This agents is responsible for calculating score for candidate information",
+            # is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+        )
+
+        # Register the custom function
+        # self.candidate_scorer.register_function(
+        #     function_map={
+        #         "my_custom_function": self.my_custom_function
+        #     }
+        # )
+
         # self.complete_data_extraction = CompleteDataExtraction(os.getenv('OPEN_API_KEY'))
-        self.componentWiseDataExtraction = ComponentWiseDataExtraction()
+        self.componentWiseDataExtraction = ComponentWiseDataExtraction(os.getenv('GOOGLE_API_KEY'))
 
         # self.planning_model_client = OpenAIChatCompletionClient(
-        #     model="gpt-4o",
+        #     schemas="gpt-4o",
         #     api_key=os.getenv('OPEN_API_KEY')
         # )
 
-        self.combined_termination = TextMentionTermination('TERMINATE') | MaxMessageTermination(max_messages=20)
+        # self.combined_termination = TextMentionTermination('TERMINATE') | MaxMessageTermination(max_messages=20)
+        self.combined_termination = MaxMessageTermination(max_messages=6)
 
         self.planning_agent = AssistantAgent(
             name="PlanningAgent",
-            description="An agent for planning tasks, this agent should be the first to engage when given a new task.",
+            description="An agents for planning tasks, this agents should be the first to engage when given a new task.",
             model_client=self.model_client,
             system_message="""
-            You are a planning agent.
+            You are a planning agents.
             Your job is to break down complex tasks into smaller, manageable subtasks.
-            Your team members are:
+            ** Your team members are below **
                 CompleteResumeExtractionAgent: Extracts the resume data from raw text data
-                ComponentWiseResumeExtractionAgent: Extracts the resume data from raw text data for different sections
-    
+                CandidateDataScorer: Calculates score of the candidate data
+            
+            ** Processing order **
+            1. First extract the complete resume information.
+            2. Then calculate the score for candidate data 
+            
             You only plan and delegate tasks - you do not execute them yourself.
     
             When assigning tasks, use this format:
-            1. <agent> : <task>
+            1. <agents> : <task>
     
             After all tasks are complete, summarize the findings and end with "TERMINATE".
             """,
@@ -74,16 +99,16 @@ class ResumeHandler:
         )
 
         self.component_group_chat_prompt = """
-        Select an agent to perform the task.
+        Select an agents to perform the task.
         
         {roles}
         
         current conversation history :
         {history}
         
-        Read the above conversation, then select an agent from {participants} to perform the next task.
-        Make sure that the planning agent has assigned task before other agents start working.
-        Only select one agent.
+        Read the above conversation, then select an agents from {participants} to perform the next task.
+        Make sure that the planning agents has assigned task before other agents start working.
+        Only select one agents.
         """
 
         self.component_wise_data_extraction_group_chat = SelectorGroupChat(
@@ -99,31 +124,51 @@ class ResumeHandler:
             selector_prompt=self.component_group_chat_prompt,
             allow_repeated_speaker=True)
 
-        self.component_wise_data_extraction_society_of_mind_agent = SocietyOfMindAgent("component_wise_data_extraction_society_of_mind",
+        self.component_wise_data_extraction_society_of_mind_agent = SocietyOfMindAgent("ComponentWiseDataExtraction",
                                                         team=self.component_wise_data_extraction_group_chat,
                                                         model_client=self.model_client,
-                                                        response_prompt='Update the missing resume components which could not be extracted earlier.')
+                                                        response_prompt='Update the missing resume components which could not be extracted earlier. And return the complete extracted information')
+
+    def candidate_scorer_custom_function(self, candidateData: Candidate) -> str:
+        """
+        A custom function that calculates score for candidate information.
+        """
+        x = candidateData
+        return "The score is 4 out of 5"
+
+    def selector_func(self, messages: Sequence[BaseAgentEvent | BaseChatMessage]) -> str | None:
+        x = 1
+        if messages[-1].source != "xyz":
+            return None
+        return None
 
     async def process_resume(self, task):
         selector_prompt = '''
-        Select an agent to perform the task.
+        Select an agents to perform the task.
         
         {roles}
         
         current conversation history :
         {history}
         
-        Read the above conversation, then select an agent from {participants} to perform the next task.
-        Make sure that the planning agent has assigned task before other agents start working.
-        Only select one agent.
+        Read the above conversation, then select an agents from {participants} to perform the next task.
+        Make sure that the planning agents has assigned task before other agents start working.
+        Only select one agents.
         '''
 
         self.selector_team = SelectorGroupChat(
-            participants=[self.planning_agent, self.complete_extraction_agent, self.component_wise_data_extraction_society_of_mind_agent],
+            participants=[self.planning_agent,
+                          self.complete_extraction_agent,
+                          # self.component_wise_data_extraction_society_of_mind_agent,
+                          self.candidate_scorer
+                          ],
             model_client=self.model_client,
             termination_condition=self.combined_termination,
             selector_prompt=selector_prompt,
-            allow_repeated_speaker=True)
+            allow_repeated_speaker=True,
+            selector_func=self.selector_func
+            # speaker_selection_method = self.custom_speaker_selection_func
+        )
 
         # response = self.selector_team.run_stream(task=task)
         response = await Console(self.selector_team.run_stream(task=task))
@@ -136,7 +181,7 @@ if __name__ == "__main__":
     task = """
     Please extract information from the below raw resume data.
     1. Extract the complete information.
-    2. if some of components are not extracted well then extract the missing information component wise.
+    2. Calculate the score for candidate information 
 
     ** Resume Content **
     PDF Miner

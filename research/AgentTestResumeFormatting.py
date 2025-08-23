@@ -51,7 +51,7 @@ class Resume(BaseModel):
 #     description="An Agent for extracting information from raw resume information",
 #     model_client=model_client,
 #     system_message="""
-#     You are data extraction agent.
+#     You are data extraction agents.
 #     Your job is to read the raw text and format them based on the format instruction.
 #
 #     After the tasks is complete, end with "TERMINATE".
@@ -71,7 +71,7 @@ class Resume(BaseModel):
 #     description="An Agent for extracting the candidate information from the resume",
 #     model_client=model_client,
 #     system_message="""
-#     You are data extraction agent.
+#     You are data extraction agents.
 #     Your job is to read the raw text and extract candidate information based on the format instruction.
 #     """,
 #     output_content_type=Candidate
@@ -82,7 +82,7 @@ class Resume(BaseModel):
 #     description="An Agent for extracting the education information from the resume",
 #     model_client=model_client,
 #     system_message="""
-#     You are data extraction agent.
+#     You are data extraction agents.
 #     Your job is to read the raw text and extract education information based on the format instruction.
 #     Return and empty list if the required information is not available
 #     """,
@@ -94,7 +94,7 @@ class Resume(BaseModel):
 #     description="An Agent for extracting the project information from the resume",
 #     model_client=model_client,
 #     system_message="""
-#     You are data extraction agent.
+#     You are data extraction agents.
 #     Your job is to read the raw text and extract company project information based on the format instruction.
 #     List of the projects done in the companies if available. Do not consider personal projects.
 #     Extract projects only if they are company projects, return empty list if not found.
