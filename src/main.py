@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 from components.agents.DataExtractionAgent import ResumeDataExtractor
 
@@ -10,8 +11,11 @@ async def process_resume(raw_resume_data):
     resume_data = {
         "resume_content": raw_resume_data
     }
-    extracted_resume_data = resume_extractor.extract_resume(resume_data)
-    x = 1
+    extracted_resume_data = await resume_extractor.extract_resume(resume_data)
+    resume_string = extracted_resume_data.messages[-1].content
+    resume_json = json.loads(resume_string)
+    x = 1 # For debugging
+    return resume_json
 
 
 

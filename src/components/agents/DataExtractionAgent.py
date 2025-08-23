@@ -10,7 +10,7 @@ from autogen_agentchat.ui import Console
 import asyncio
 import sys
 # sys.path.append("..")
-sys.path.append('schemas.ResumeSchema')
+sys.path.append('components')
  # or sys.path.insert(0, 'path/to/your/folder'))
 
 from schemas.ResumeSchema import Resume, Candidate
@@ -43,7 +43,8 @@ class ResumeDataExtractor:
     async def extract_resume(self, task):
         prompt = complete_resume_extraction_user_prompt.format(**task)
         response = await self.complete_resume_extraction_agent.run(task=prompt)
-        print(response)
+        # print(response)
+        return response
 
 
 if __name__ == "__main__":
