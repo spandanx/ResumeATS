@@ -111,6 +111,17 @@ You are a data extractor and rating agents.
 """
 
 complete_resume_extraction_system_prompt = """
-You are resume data extractor agent. Your task is to read the raw resume data
+You are a resume data extractor agent. Your task is to read the raw resume data
 and extract the data based on the given pydantic format instruction.
+"""
+
+resume_scoring_system_prompt = """
+You are a resume scoring agent. Your task is to score the different components of the resume.
+Score the resume parts based on the completeness, preciseness, grammatical correctness and any other common resume standards.
+Score the components under 0 to 10. Score can be in decimals as well.
+"""
+
+job_description_system_prompt = """
+You are a job description extracting agent. Your task is to extract information from the job description.
+Extract different components from the job description.
 """

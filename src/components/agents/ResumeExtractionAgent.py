@@ -23,18 +23,20 @@ import os
 
 load_dotenv()
 
-class ResumeDataExtractor:
+class ResumeDataExtractingAgent:
 
     def __init__(self):
 
         self.model_resume_client = OpenAIChatCompletionClient(
             model="gpt-4o-mini",
             api_key=os.getenv('OPEN_API_KEY'),
-            response_format=Resume
+            response_format=Resume,
+            max_retries=3,  # Retry up to 3 times on failures
+            timeout=20  # 20-second timeout per attempt
         )
 
         self.complete_resume_extraction_agent = AssistantAgent(
-            name="ResumeCompleteDataExtractor",
+            name="ResumeCompleteDataExtractingAgent",
             description="An Agent for extracting complete information from raw text",
             system_message=complete_resume_extraction_system_prompt,
             model_client=self.model_resume_client
@@ -144,5 +146,4 @@ if __name__ == "__main__":
 
     """
     }
-    # task = "Who was the Miami Heat player with the highest point in the 2006-2007 season, and what was the percentage change in his total rebounds between the 2007-2008 and 2008-2009 seasons?"
     asyncio.run(resumeHandler.extract_resume(task))
