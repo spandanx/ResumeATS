@@ -15,3 +15,9 @@ class JDExtractionException(Exception):
     def __init__(self, message="Could not extract the job description!"):
         self.message = message
         super().__init__(self.message)
+
+class SimilarityCalculationException(Exception):
+    """A custom exception for resume scoring error condition."""
+    def __init__(self, message="Could not calculate the similarity score between job description and resume!"):
+        self.message = message
+        super().__init__(self.message)

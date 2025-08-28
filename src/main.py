@@ -4,10 +4,11 @@ import json
 from components.agents.JDExtractionAgent import JDExtractionAgent
 from components.agents.ResumeScoringAgent import ResumeScoringAgent
 from components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
+from components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
 from components.utils.ResumeScoreCalculator import ResumeScoreCalculator
+from components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
 
-from components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException
-# from components.exceptions.CustomExceptions import
+from components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
 
 '''
 Extracts the job description data
@@ -18,21 +19,27 @@ async def extract_job_description(job_description):
         "job_description": job_description
     }
     try:
-        extracted_jd_data = await jdExtractionAgent.extract_job_description(job_description_raw_input)
-        jd_json = json.loads(extracted_jd_data.messages[-1].content)
+        # extracted_jd_data = await jdExtractionAgent.extract_job_description(job_description_raw_input)
+        # jd_json = json.loads(extracted_jd_data.messages[-1].content)
+        jd_json = {"responsibilities":["Develop, test, and maintain web applications using Java and Spring Boot.","Collaborate with cross-functional teams to define and implement new features.","Ensure the performance, quality, and responsiveness of applications.","Identify and correct bottlenecks and fix bugs.","Document development processes, coding standards, and project requirements.","Participate in code reviews to ensure adherence to best practices and coding standards.","Stay up-to-date with emerging technologies and industry trends."],"skills":["Java","Spring Boot","Hibernate","RESTful APIs","SQL","Git","Maven","Unit Testing"],"qualifications":["Bachelor's degree in Computer Science, Information Technology, or related field.","Proven experience as a Java Developer, with expertise in Spring Boot.","Strong understanding of object-oriented programming principles and design patterns.","Experience with databases such as MySQL, PostgreSQL, or MongoDB.","Knowledge of front-end technologies like HTML, CSS, and JavaScript is a plus.","Excellent problem-solving skills and attention to detail.","Good communication and teamwork abilities."],"experience":[],"salary":"Not Mentioned","certifications":[]}
         return jd_json
     except Exception as e:
         raise JDExtractionException()
 
 '''
-Adds the component weights to the results
+JD and resume similarity score calculation
 '''
-def update_weightage_info(resume_score_json, component_wise_score):
-    updated_map = dict()
-    for key, val in resume_score_json.items():
-        val.update(component_wise_score[key])
-        updated_map[key] = val
-    return updated_map
+
+
+# '''
+# Adds the component weights to the results
+# '''
+# def update_weightage_info(resume_score_json, component_wise_score):
+#     updated_map = dict()
+#     for key, val in resume_score_json.items():
+#         val.update(component_wise_score[key])
+#         updated_map[key] = val
+#     return updated_map
 
 '''
 Extracts the resume data
@@ -164,18 +171,46 @@ async def calculate_resume_score(resume_json):
         raise ResumeScoringException()
 
 '''
+Calculates the similarity score between the job description and resume content
+'''
+async def jd_resume_similarity_score_calculator(jd_json, resume_json):
+    similarityScoreCalculationAgent = SimilarityScoreCalculationAgent()
+    similarity_score_input = {
+        "job_description": jd_json,
+        "resume_json": resume_json
+    }
+    try:
+        # extracted_similarity_data = await similarityScoreCalculationAgent.calculate_similarity_score(similarity_score_input)
+        # similarity_json = json.loads(extracted_similarity_data.messages[-1].content)
+        similarity_json = {"scoring_sections":[{"category":"Skills","similarity_score":4,"justification":"The candidate has experience with Git, HTML, and JavaScript which overlap with some of the skills listed in the job description. However, they lack direct experience in Java, Spring Boot, Hibernate, RESTful APIs, and SQL, which greatly reduces the score.","suggestions":["Gain experience with Java and Spring Boot through coursework or personal projects.","Complete relevant certifications or online courses focusing on RESTful APIs and SQL."]},{"category":"Experience","similarity_score":2,"justification":"The candidate's experience primarily revolves around cloud computing and cybersecurity, which are not directly aligned with the Java Developer role that emphasizes web application development. Their projects do not demonstrate relevant experience with the required technologies.","suggestions":["Seek internships or projects specifically focused on Java, Spring Boot, and web application development.","Participate in hackathons or coding competitions that involve Java development."]},{"category":"Projects","similarity_score":3,"justification":"While the candidate has relevant personal projects that involve web development components, they do not specifically align with the technologies and frameworks stated in the job description, such as Java or Spring Boot. The projects utilize React and Firebase instead.","suggestions":["Develop a project that utilizes Java and Spring Boot to showcase relevant skills.","Participate in collaborative coding projects with an emphasis on Java to broaden project experience."]},{"category":"Qualifications","similarity_score":6,"justification":"The candidate holds a Bachelor of Technology in Computer Science, which meets the educational requirement listed in the job description. They also possess a general understanding of object-oriented principles but lack specific experience in Java or Spring Boot.","suggestions":["Consider pursuing further education or certifications in Java/Spring Boot development to strengthen qualifications.","Engage in coursework that enhances knowledge of design patterns and databases."]}]}
+        weights = {
+            "experience": 8,
+            "skills": 9,
+            "projects": 7,
+            "others": 5
+        }
+        jdResumeSimilarityScoreCalculator = JDResumeSimilarityScoreCalculator(weights)
+        total_score, component_wise_score = jdResumeSimilarityScoreCalculator.calculate_score(score_info=similarity_json, max_score_per_category=10)
+        return total_score, component_wise_score
+    except Exception as e:
+        raise SimilarityCalculationException()
+
+
+'''
 Extract the resume data, job description and calculate resume and similarity score 
 '''
 async def process_resume(raw_resume_data, raw_job_description):
     extracted_resume_json = await extract_resume_description(raw_resume_data=raw_resume_data)
-    calculated_resume_score_json = await calculate_resume_score(resume_json = extracted_resume_json)
-    updated_map = update_weightage_info(extracted_resume_json, calculated_resume_score_json)
-    extracted_jd = extract_job_description(job_description=raw_job_description)
-    scoring_result = {
-        "total_score": calculated_resume_score_json,
-        "component_wise_score_and_justification": updated_map
-    }
-    return scoring_result
+    total_score, calculated_resume_score_json = await calculate_resume_score(resume_json = extracted_resume_json)
+    # updated_map = update_weightage_info(extracted_resume_json, calculated_resume_score_json)
+    extracted_jd = await extract_job_description(job_description=raw_job_description)
+    total_score, component_wise_score = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
+    # scoring_result = {
+    #     "total_score": calculated_resume_score_json,
+    #     "component_wise_score_and_justification": updated_map
+    # }
+    x = 1
+    return extracted_jd
 
 if __name__ == "__main__":
     resume_data = """
@@ -270,4 +305,31 @@ if __name__ == "__main__":
     – Collected over Rs. 20,000 in entry fees for different activities.
 
     """
-    asyncio.run(process_resume(resume_data))
+    job_description = """
+    Responsibilities
+    Develop, test, and maintain web applications using Java and Spring Boot.
+    Collaborate with cross-functional teams to define and implement new features.
+    Ensure the performance, quality, and responsiveness of applications.
+    Identify and correct bottlenecks and fix bugs.
+    Document development processes, coding standards, and project requirements.
+    Participate in code reviews to ensure adherence to best practices and coding standards.
+    Stay up-to-date with emerging technologies and industry trends.
+    Qualifications
+    Bachelor's degree in Computer Science, Information Technology, or related field.
+    Proven experience as a Java Developer, with expertise in Spring Boot.
+    Strong understanding of object-oriented programming principles and design patterns.
+    Experience with databases such as MySQL, PostgreSQL, or MongoDB.
+    Knowledge of front-end technologies like HTML, CSS, and JavaScript is a plus.
+    Excellent problem-solving skills and attention to detail.
+    Good communication and teamwork abilities.
+    Skills
+    Java
+    Spring Boot
+    Hibernate
+    RESTful APIs
+    SQL
+    Git
+    Maven
+    Unit Testing
+    """
+    asyncio.run(process_resume(raw_resume_data=resume_data, raw_job_description=job_description))

@@ -20,3 +20,13 @@ Extract different components from the below job description.
 ** Job description **
 {{job_description}}
 """
+
+similarity_score_user_prompt = f"""
+Compare the below job description and resume data and calculate the similarity score on different components
+
+** Job description **
+{{job_description}}
+
+** Resume JSON Content **
+{{resume_json}}
+"""

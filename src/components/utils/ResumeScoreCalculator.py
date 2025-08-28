@@ -15,7 +15,8 @@ class ResumeScoreCalculator:
                 total_score += max_score_per_category * self.weights[key]
                 component_wise_score[key] = {
                     "weight": self.weights[key],
-                    "component_score": val["score"]
+                    "component_score": val["score"],
+                    "total_score": max_score_per_category
                 }
         x = 1
         return ((resume_score/total_score) * 100), component_wise_score
