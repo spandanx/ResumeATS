@@ -33,7 +33,7 @@ def read_pdf_with_pdfminer(file_path: str):
 
 if __name__=="__main__":
     file_path = "C:\\Users\\Spandan\\Downloads\\70__ATS_rating_Resume_Template.pdf"
-    # content = read_pdf_content_with_pypdf2(file_path)
-    # content = read_pdf_with_unstructured(file_path)
-    content = read_pdf_with_pdfminer(file_path)
+    content_pypdf = read_pdf_content_with_pypdf2(file_path)
+    content_unstr = read_pdf_with_unstructured(file_path)
+    content_pdfminer = read_pdf_with_pdfminer(file_path)
     x = 1

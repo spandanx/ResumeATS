@@ -6,12 +6,12 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 import asyncio
 import sys
 # sys.path.append("..")
-sys.path.append('components')
+# sys.path.append('components')
  # or sys.path.insert(0, 'path/to/your/folder'))
 
-from schemas.SimilarityCalculationSchema import SimilarityScoreSchema
-from prompts.system_prompts import similarity_score_system_prompt
-from prompts.user_prompts import similarity_score_user_prompt
+from src.components.schemas.SimilarityCalculationSchema import SimilarityScoreSchema
+from src.components.prompts.system_prompts import similarity_score_system_prompt
+from src.components.prompts.user_prompts import similarity_score_user_prompt
 
 from dotenv import load_dotenv
 import os

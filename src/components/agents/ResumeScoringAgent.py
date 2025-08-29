@@ -6,12 +6,12 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 import asyncio
 import sys
 # sys.path.append("..")
-sys.path.append('components')
+# sys.path.append('components')
  # or sys.path.insert(0, 'path/to/your/folder'))
 
-from schemas.ResumeScoreSchema import ResumeScore
-from prompts.system_prompts import resume_scoring_system_prompt
-from prompts.user_prompts import resume_scoring_user_prompt
+from src.components.schemas.ResumeScoreSchema import ResumeScore
+from src.components.prompts.system_prompts import resume_scoring_system_prompt
+from src.components.prompts.user_prompts import resume_scoring_user_prompt
 
 from dotenv import load_dotenv
 import os

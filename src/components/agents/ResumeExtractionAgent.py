@@ -10,13 +10,12 @@ from autogen_agentchat.ui import Console
 import asyncio
 import sys
 # sys.path.append("..")
-sys.path.append('components')
+# sys.path.append('components')
  # or sys.path.insert(0, 'path/to/your/folder'))
 
-from schemas.ResumeSchema import Resume, Candidate
-# from prompts.system_prompts import resume_extraction_system_prompts
-from prompts.system_prompts import complete_resume_extraction_system_prompt
-from prompts.user_prompts import complete_resume_extraction_user_prompt
+from src.components.schemas.ResumeSchema import Resume, Candidate
+from src.components.prompts.system_prompts import complete_resume_extraction_system_prompt
+from src.components.prompts.user_prompts import complete_resume_extraction_user_prompt
 
 from dotenv import load_dotenv
 import os
@@ -50,7 +49,7 @@ class ResumeDataExtractingAgent:
 
 
 if __name__ == "__main__":
-    resumeHandler = ResumeDataExtractor()
+    resumeHandler = ResumeDataExtractingAgent()
     # response = resumeHandler.process_resume()
     task = {
         "resume_content": """

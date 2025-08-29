@@ -3,3 +3,5 @@ unstructured
 unstructured[local-inference]
 pdfminer.six
 pi-heif
+streamlit
+plotly

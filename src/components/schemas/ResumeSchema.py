@@ -35,12 +35,16 @@ class Certification(BaseModel):
     certification_authority: str = Field(description="Name of the certification authority or company, return 'NOT FOUND' is not found")
     duration: str = Field(description="Duration or timeline of the certification, return 'NOT FOUND' if not found")
 
+class OtherCategory(BaseModel):
+    category_name: str = Field(description="Name of the category")
+    summary: str = Field(description="Summary of the content present in the category")
+
 class Resume(BaseModel):
     candidate_information: Candidate = Field(description="Information related to the candidate")
     education: List[Education] = Field(description="list of the educational information, return empty list if not found")
-    company_projects: List[Project] = Field(description="list of the projects done in the companies if available. Do not consider personal projects. Extract projects only if they are company projects, return empty list if not found")
     personal_projects: List[Project] = Field(description="list of the personal projects mentioned in the resume is available. Consider only personal projects and do not consider company projects, return empty list if not found")
     skills: List[str] = Field(description="Skills of the person")
     experience: List[Experience] = Field(description="list of the company experiences available in the resume, return empty list if not found")
     achievements: List[str] = Field(description="Achievements made or reward received during working in companies, return empty list if not found")
     certifications: List[Certification] = Field(description="List of the certifications, return empty list if not found")
+    others: List[OtherCategory] = Field(description="List of components that does not lie in any already defined category")

@@ -1,14 +1,23 @@
 import asyncio
 import json
 
-from components.agents.JDExtractionAgent import JDExtractionAgent
-from components.agents.ResumeScoringAgent import ResumeScoringAgent
-from components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
-from components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
-from components.utils.ResumeScoreCalculator import ResumeScoreCalculator
-from components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
+from src.components.agents.JDExtractionAgent import JDExtractionAgent
+from src.components.agents.ResumeScoringAgent import ResumeScoringAgent
+from src.components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
+from src.components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
+from src.components.utils.ResumeScoreCalculator import ResumeScoreCalculator
+from src.components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
 
-from components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
+from src.components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
+from src.components.DataExtraction.PDFContentReader import PDFContentReader
+
+'''
+Reads PDF content from file
+'''
+async def read_pdf(file_path):
+    pdfContentReader = PDFContentReader()
+    content_pdfminer = pdfContentReader.read_pdf_with_pdfminer(file_path)
+    return content_pdfminer
 
 '''
 Extracts the job description data
@@ -46,7 +55,6 @@ Extracts the resume data
 '''
 async def extract_resume_description(raw_resume_data):
     resume_extractor = ResumeDataExtractingAgent()
-    resume_scorer = ResumeScoringAgent()
     resume_data_raw_input = {
         "resume_content": raw_resume_data
     }
@@ -104,6 +112,7 @@ async def extract_resume_description(raw_resume_data):
 Calculate resume score
 '''
 async def calculate_resume_score(resume_json):
+    resume_scorer = ResumeScoringAgent()
     weights = {
         "candidate_information": 5,
         "education": 6,
@@ -113,60 +122,22 @@ async def calculate_resume_score(resume_json):
         "experience": 9,
         "achievements": 4,
         "certifications": 4,
+        "others": 5
     }
     resume_scoring_input = {
         "resume_json": resume_json
     }
     try:
         # resume_scores = await resume_scorer.score_resume(resume_scoring_input)
-        # resume_score_json = json.loads(resume_scores.messages[-1].content)
-        resume_score_json = {"candidate_information": {"score": 8.0,
-                                                       "justification": "The candidate information is mostly complete, including name, contact details, and links to professional profiles. However, it lacks more in-depth personal information that could enhance identification, such as address or a short personal statement.",
-                                                       "improvement_suggestions": [
-                                                           "Add a brief summary or objective statement that outlines career goals and aspirations.",
-                                                           "Include a full address or at least city and state for geographical context.",
-                                                           "Ensure that GitHub and LinkedIn profile links are actual URLs instead of placeholders."]},
-                             "education": {"score": 7.5,
-                                           "justification": "The education section contains relevant details about the degree, institution, duration, and field of study. However, the marks are not clearly presented, using a placeholder instead of an actual value.",
-                                           "improvement_suggestions": [
-                                               "Replace placeholder marks with actual CGPA or percentage if available.",
-                                               "Include any relevant coursework or projects that highlight skills learned during the education."]},
-                             "company_projects": {"score": 2.0,
-                                                  "justification": "There are no entries in the company projects section, resulting in a low score. Company projects can significantly showcase practical experience and contributions.",
-                                                  "improvement_suggestions": [
-                                                      "Add at least one project from a company, detailing the project goals, your role, technologies used, and outcomes."]},
-                             "personal_projects": {"score": 8.5,
-                                                   "justification": "The personal projects section is detailed with project names, descriptions, technologies used, and implementation methods. However, the 'duration' is marked as 'NOT FOUND' for all projects, which isn’t informative.",
-                                                   "improvement_suggestions": [
-                                                       "Provide the actual durations for each project, even if it's just the approximate time taken.",
-                                                       "Highlight the impact or results of these projects, such as user adoption or performance improvements."]},
-                             "skills": {"score": 9.0,
-                                        "justification": "The skills section is extensive and covers a broad range of relevant technologies and programming languages, showcasing versatility. There are no apparent typos or errors.",
-                                        "improvement_suggestions": [
-                                            "Consider grouping skills into categories (e.g., programming languages, frameworks, databases) for clarity.",
-                                            "Prioritize or rank skills based on proficiency or relevance to the desired job."]},
-                             "experience": {"score": 8.5,
-                                            "justification": "The experience section is informative, outlining roles, contributions, and technologies. It effectively demonstrates relevant internships and the skills acquired during those roles. However, inclusion of technology used is missing in job details.",
-                                            "improvement_suggestions": [
-                                                "List any tools or technologies used in each internship role to enhance specificity and context.",
-                                                "Quantify achievements or contributions when possible (e.g., 'Improved system efficiency by 20%')."]},
-                             "achievements": {"score": 1.0,
-                                              "justification": "The achievements section is currently empty, leading to a low score. This section should ideally highlight awards or recognitions that complement professional experience.",
-                                              "improvement_suggestions": [
-                                                  "Include any academic honors, scholarships, or relevant personal achievements that demonstrate expertise and motivation.",
-                                                  "Consider adding certifications or recognitions, especially those related to technology or programming."]},
-                             "certifications": {"score": 1.0,
-                                                "justification": "The certifications section is empty, reflecting no formal certifications listed. Certifications can significantly validate skills, especially in technical fields.",
-                                                "improvement_suggestions": [
-                                                    "Add any relevant certifications completed, such as AWS Certified Solutions Architect or other IT-related credentials.",
-                                                    "Consider pursuing and highlighting certifications that are industry-recognized."]}}
+        # resume_score_description = json.loads(resume_scores.messages[-1].content)
+        resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
 
         resumeScoreCalculator = ResumeScoreCalculator(weights)
         max_score_per_category = 10
-        resume_score, component_wise_score = resumeScoreCalculator.calculate_score(resume_score_json,
+        resume_score, component_wise_score = resumeScoreCalculator.calculate_score(resume_score_description,
                                                                                    max_score_per_category)
         ## Update scoring data and include weights for those
-        return resume_score, component_wise_score
+        return resume_score, component_wise_score, resume_score_description
     except Exception as e:
         raise ResumeScoringException()
 
@@ -181,8 +152,8 @@ async def jd_resume_similarity_score_calculator(jd_json, resume_json):
     }
     try:
         # extracted_similarity_data = await similarityScoreCalculationAgent.calculate_similarity_score(similarity_score_input)
-        # similarity_json = json.loads(extracted_similarity_data.messages[-1].content)
-        similarity_json = {"scoring_sections":[{"category":"Skills","similarity_score":4,"justification":"The candidate has experience with Git, HTML, and JavaScript which overlap with some of the skills listed in the job description. However, they lack direct experience in Java, Spring Boot, Hibernate, RESTful APIs, and SQL, which greatly reduces the score.","suggestions":["Gain experience with Java and Spring Boot through coursework or personal projects.","Complete relevant certifications or online courses focusing on RESTful APIs and SQL."]},{"category":"Experience","similarity_score":2,"justification":"The candidate's experience primarily revolves around cloud computing and cybersecurity, which are not directly aligned with the Java Developer role that emphasizes web application development. Their projects do not demonstrate relevant experience with the required technologies.","suggestions":["Seek internships or projects specifically focused on Java, Spring Boot, and web application development.","Participate in hackathons or coding competitions that involve Java development."]},{"category":"Projects","similarity_score":3,"justification":"While the candidate has relevant personal projects that involve web development components, they do not specifically align with the technologies and frameworks stated in the job description, such as Java or Spring Boot. The projects utilize React and Firebase instead.","suggestions":["Develop a project that utilizes Java and Spring Boot to showcase relevant skills.","Participate in collaborative coding projects with an emphasis on Java to broaden project experience."]},{"category":"Qualifications","similarity_score":6,"justification":"The candidate holds a Bachelor of Technology in Computer Science, which meets the educational requirement listed in the job description. They also possess a general understanding of object-oriented principles but lack specific experience in Java or Spring Boot.","suggestions":["Consider pursuing further education or certifications in Java/Spring Boot development to strengthen qualifications.","Engage in coursework that enhances knowledge of design patterns and databases."]}]}
+        # similarity_score_description = json.loads(extracted_similarity_data.messages[-1].content)
+        similarity_score_description = {"scoring_sections":[{"category":"Skills","similarity_score":4,"justification":"The candidate has experience with Git, HTML, and JavaScript which overlap with some of the skills listed in the job description. However, they lack direct experience in Java, Spring Boot, Hibernate, RESTful APIs, and SQL, which greatly reduces the score.","suggestions":["Gain experience with Java and Spring Boot through coursework or personal projects.","Complete relevant certifications or online courses focusing on RESTful APIs and SQL."]},{"category":"Experience","similarity_score":2,"justification":"The candidate's experience primarily revolves around cloud computing and cybersecurity, which are not directly aligned with the Java Developer role that emphasizes web application development. Their projects do not demonstrate relevant experience with the required technologies.","suggestions":["Seek internships or projects specifically focused on Java, Spring Boot, and web application development.","Participate in hackathons or coding competitions that involve Java development."]},{"category":"Projects","similarity_score":3,"justification":"While the candidate has relevant personal projects that involve web development components, they do not specifically align with the technologies and frameworks stated in the job description, such as Java or Spring Boot. The projects utilize React and Firebase instead.","suggestions":["Develop a project that utilizes Java and Spring Boot to showcase relevant skills.","Participate in collaborative coding projects with an emphasis on Java to broaden project experience."]},{"category":"Qualifications","similarity_score":6,"justification":"The candidate holds a Bachelor of Technology in Computer Science, which meets the educational requirement listed in the job description. They also possess a general understanding of object-oriented principles but lack specific experience in Java or Spring Boot.","suggestions":["Consider pursuing further education or certifications in Java/Spring Boot development to strengthen qualifications.","Engage in coursework that enhances knowledge of design patterns and databases."]}]}
         weights = {
             "experience": 8,
             "skills": 9,
@@ -190,8 +161,8 @@ async def jd_resume_similarity_score_calculator(jd_json, resume_json):
             "others": 5
         }
         jdResumeSimilarityScoreCalculator = JDResumeSimilarityScoreCalculator(weights)
-        total_score, component_wise_score = jdResumeSimilarityScoreCalculator.calculate_score(score_info=similarity_json, max_score_per_category=10)
-        return total_score, component_wise_score
+        total_score, component_wise_score = jdResumeSimilarityScoreCalculator.calculate_score(score_info=similarity_score_description, max_score_per_category=10)
+        return total_score, component_wise_score, similarity_score_description
     except Exception as e:
         raise SimilarityCalculationException()
 
@@ -199,18 +170,29 @@ async def jd_resume_similarity_score_calculator(jd_json, resume_json):
 '''
 Extract the resume data, job description and calculate resume and similarity score 
 '''
-async def process_resume(raw_resume_data, raw_job_description):
-    extracted_resume_json = await extract_resume_description(raw_resume_data=raw_resume_data)
-    total_score, calculated_resume_score_json = await calculate_resume_score(resume_json = extracted_resume_json)
-    # updated_map = update_weightage_info(extracted_resume_json, calculated_resume_score_json)
-    extracted_jd = await extract_job_description(job_description=raw_job_description)
-    total_score, component_wise_score = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
-    # scoring_result = {
-    #     "total_score": calculated_resume_score_json,
-    #     "component_wise_score_and_justification": updated_map
-    # }
+async def process_resume(resume_file_path, raw_job_description):
+    scoring_result = dict()
+    scoring_result["components"] = []
+    if resume_file_path:
+        resume_content = await read_pdf(resume_file_path)
+        extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content)
+        resume_total_score, resume_component_wise_score, resume_score_description = await calculate_resume_score(resume_json = extracted_resume_json)
+        # updated_map = update_weightage_info(extracted_resume_json, calculated_resume_score_json)
+
+        scoring_result["resume_total_score"] = resume_total_score
+        scoring_result["resume_component_wise_score"] = resume_component_wise_score
+        scoring_result["resume_score_description"] = resume_score_description
+        scoring_result["components"].append("resume_description")
+    if raw_job_description:
+        extracted_jd = await extract_job_description(job_description=raw_job_description)
+        similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
+
+        scoring_result["similarity_total_score"] = similarity_total_score
+        scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
+        scoring_result["similarity_score_description"] = similarity_score_description
+        scoring_result["components"].append("similarity_description")
     x = 1
-    return extracted_jd
+    return scoring_result
 
 if __name__ == "__main__":
     resume_data = """
@@ -332,4 +314,6 @@ if __name__ == "__main__":
     Maven
     Unit Testing
     """
-    asyncio.run(process_resume(raw_resume_data=resume_data, raw_job_description=job_description))
+    file_path = "C:\\Users\\Spandan\\Downloads\\70__ATS_rating_Resume_Template.pdf"
+    response = asyncio.run(process_resume(resume_file_path=file_path, raw_job_description=job_description))
+    print(response)

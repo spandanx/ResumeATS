@@ -8,17 +8,29 @@ class ResumeScoreCalculator:
         total_score = 0
         resume_score = 0
         component_wise_score = dict()
-        for key, val in score_info.items():
-            if key in self.weights:
-                print(key, val["score"], "Weight - ", self.weights[key])
-                resume_score += val["score"] * self.weights[key]
-                total_score += max_score_per_category * self.weights[key]
-                component_wise_score[key] = {
-                    "weight": self.weights[key],
-                    "component_score": val["score"],
+        for section in score_info["scoring_sections"]:
+            if section["category"].lower() in self.weights:
+                print(section["category"].lower(), section["score"], "Weight - ", self.weights[section["category"].lower()])
+                resume_score += section["score"] * self.weights[section["category"].lower()]
+                total_score += max_score_per_category * self.weights[section["category"].lower()]
+                component_wise_score[section["category"].lower()] = {
+                    "weight": self.weights[section["category"].lower()],
+                    "component_score": section["score"],
+                    "total_score": max_score_per_category
+                }
+            else:
+                print(section["category"].lower(), section["score"], "Weight - ",
+                      self.weights["others"])
+                resume_score += section["score"] * self.weights["others"]
+                total_score += max_score_per_category * self.weights["others"]
+                component_wise_score[section["category"].lower()] = {
+                    "weight": self.weights["others"],
+                    "component_score": section["score"],
                     "total_score": max_score_per_category
                 }
         x = 1
+        if total_score == 0:
+            return 0, {}
         return ((resume_score/total_score) * 100), component_wise_score
 
 
