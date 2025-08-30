@@ -15,6 +15,8 @@ import plotly.graph_objects as go
 def generate_random_color():
     return f'#{random.randint(0, 0xFFFFFF):06x}'
 
+st.set_page_config(page_title="Resume ATS Scorer")
+
 st.title("Resume ATS scorer")
 st.set_page_config(layout="wide")
 st.markdown("""
@@ -37,7 +39,7 @@ with input_tab:
             st.markdown(":red[File Not found]")
         else:
             try:
-                # response = asyncio.run(process_resume(resume_file_path=uploaded_resume_file, raw_job_description=job_description))
+                response = asyncio.run(process_resume(resume_file_path=uploaded_resume_file, raw_job_description=job_description))
                 response = {'components': ['resume_description', 'similarity_description'],
                 'resume_total_score': 58.61702127659575,
                 'resume_component_wise_score': [
@@ -56,7 +58,7 @@ with input_tab:
                     {'category': 'projects', 'similarity_score': 3, 'justification': 'While the candidate has relevant personal projects that involve web development components, they do not specifically align with the technologies and frameworks stated in the job description, such as Java or Spring Boot. The projects utilize React and Firebase instead.', 'suggestions': ['Develop a project that utilizes Java and Spring Boot to showcase relevant skills.', 'Participate in collaborative coding projects with an emphasis on Java to broaden project experience.'], 'weight': 7, 'total_score': 10},
                     {'category': 'qualifications', 'similarity_score': 6, 'justification': 'The candidate holds a Bachelor of Technology in Computer Science, which meets the educational requirement listed in the job description. They also possess a general understanding of object-oriented principles but lack specific experience in Java or Spring Boot.', 'suggestions': ['Consider pursuing further education or certifications in Java/Spring Boot development to strengthen qualifications.', 'Engage in coursework that enhances knowledge of design patterns and databases.'], 'weight': 5, 'total_score': 10}
                 ]}
-                # st.markdown(response)
+                st.markdown(response)
             except Exception as e:
                 st.markdown(":red[Something is wrong! Could not perform the analysis]")
 
@@ -79,7 +81,7 @@ with analytics_tab:
             values = [response["resume_total_score"], 100 - response["resume_total_score"]]
             # values.append(100 - response["resume_total_score"])
             # values = [response["resume_total_score"], 100 - response["resume_total_score"]]
-            colors = ['rgb(33, 75, 99)', 'rgb(18, 36, 37)']
+            colors = ['rgb(43, 171, 103)', 'rgb(138, 150, 144)']
 
             # colors = [generate_random_color() for _ in range(2)]
 
@@ -150,7 +152,7 @@ with analytics_tab:
             # colors = ['rgb(33, 75, 99)', 'rgb(18, 36, 37)']
 
             fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
-            fig.update_traces(hoverinfo="label+value+percent", textinfo='label+value', hole=.8)
+            fig.update_traces(hoverinfo="label+value", textinfo='label+value', hole=.8)
             fig.update_layout(
                 annotations=[dict(text=(str(round(response["similarity_total_score"], 2))), x=0.5, y=0.5,
                                   font_size=20, showarrow=False, xanchor="center"),
