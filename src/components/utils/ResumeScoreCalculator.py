@@ -7,32 +7,30 @@ class ResumeScoreCalculator:
     def calculate_score(self, score_info, max_score_per_category):
         total_score = 0
         resume_score = 0
-        component_wise_score = dict()
+        resume_analysis = []
         for section in score_info["scoring_sections"]:
+            temp_dict = dict(section)
             if section["category"].lower() in self.weights:
                 print(section["category"].lower(), section["score"], "Weight - ", self.weights[section["category"].lower()])
                 resume_score += section["score"] * self.weights[section["category"].lower()]
                 total_score += max_score_per_category * self.weights[section["category"].lower()]
-                component_wise_score[section["category"].lower()] = {
-                    "weight": self.weights[section["category"].lower()],
-                    "component_score": section["score"],
-                    "total_score": max_score_per_category
-                }
+
+                temp_dict["weight"] = self.weights[section["category"].lower()]
+                temp_dict["total_score"] = max_score_per_category
+
             else:
                 print(section["category"].lower(), section["score"], "Weight - ",
                       self.weights["others"])
                 resume_score += section["score"] * self.weights["others"]
                 total_score += max_score_per_category * self.weights["others"]
-                component_wise_score[section["category"].lower()] = {
-                    "weight": self.weights["others"],
-                    "component_score": section["score"],
-                    "total_score": max_score_per_category
-                }
+
+                temp_dict["weight"] = self.weights["others"]
+                temp_dict["total_score"] = max_score_per_category
+            resume_analysis.append(temp_dict)
         x = 1
         if total_score == 0:
-            return 0, {}
-        return ((resume_score/total_score) * 100), component_wise_score
-
+            return 0, []
+        return ((resume_score/total_score) * 100), resume_analysis
 
 if __name__ == "__main__":
     weights = {
@@ -46,9 +44,46 @@ if __name__ == "__main__":
     "certifications" : 4,
     }
     resumeScoreCalculator = ResumeScoreCalculator(weights)
-    dct = {"candidate_information":{"score":8.0,"justification":"The candidate information is mostly complete, including name, contact details, and links to professional profiles. However, it lacks more in-depth personal information that could enhance identification, such as address or a short personal statement.","improvement_suggestions":["Add a brief summary or objective statement that outlines career goals and aspirations.","Include a full address or at least city and state for geographical context.","Ensure that GitHub and LinkedIn profile links are actual URLs instead of placeholders."]},"education":{"score":7.5,"justification":"The education section contains relevant details about the degree, institution, duration, and field of study. However, the marks are not clearly presented, using a placeholder instead of an actual value.","improvement_suggestions":["Replace placeholder marks with actual CGPA or percentage if available.","Include any relevant coursework or projects that highlight skills learned during the education."]},"company_projects":{"score":2.0,"justification":"There are no entries in the company projects section, resulting in a low score. Company projects can significantly showcase practical experience and contributions.","improvement_suggestions":["Add at least one project from a company, detailing the project goals, your role, technologies used, and outcomes."]},"personal_projects":{"score":8.5,"justification":"The personal projects section is detailed with project names, descriptions, technologies used, and implementation methods. However, the 'duration' is marked as 'NOT FOUND' for all projects, which isn’t informative.","improvement_suggestions":["Provide the actual durations for each project, even if it's just the approximate time taken.","Highlight the impact or results of these projects, such as user adoption or performance improvements."]},"skills":{"score":9.0,"justification":"The skills section is extensive and covers a broad range of relevant technologies and programming languages, showcasing versatility. There are no apparent typos or errors.","improvement_suggestions":["Consider grouping skills into categories (e.g., programming languages, frameworks, databases) for clarity.","Prioritize or rank skills based on proficiency or relevance to the desired job."]},"experience":{"score":8.5,"justification":"The experience section is informative, outlining roles, contributions, and technologies. It effectively demonstrates relevant internships and the skills acquired during those roles. However, inclusion of technology used is missing in job details.","improvement_suggestions":["List any tools or technologies used in each internship role to enhance specificity and context.","Quantify achievements or contributions when possible (e.g., 'Improved system efficiency by 20%')."]},"achievements":{"score":1.0,"justification":"The achievements section is currently empty, leading to a low score. This section should ideally highlight awards or recognitions that complement professional experience.","improvement_suggestions":["Include any academic honors, scholarships, or relevant personal achievements that demonstrate expertise and motivation.","Consider adding certifications or recognitions, especially those related to technology or programming."]},"certifications":{"score":1.0,"justification":"The certifications section is empty, reflecting no formal certifications listed. Certifications can significantly validate skills, especially in technical fields.","improvement_suggestions":["Add any relevant certifications completed, such as AWS Certified Solutions Architect or other IT-related credentials.","Consider pursuing and highlighting certifications that are industry-recognized."]}}
+    resume_score_description = {'scoring_sections': [
+            {'category': 'candidate_information', 'score': 7.5, 'justification': "The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.", 'improvement_suggestions': ['Use actual contact details instead of placeholders.', 'Provide direct links to GitHub and LinkedIn profiles for easy access.'
+                ]
+            },
+            {'category': 'education', 'score': 6.0, 'justification': 'The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.', 'improvement_suggestions': [
+                    "Replace 'xx' in CGPA with actual score.", 'Add the month and year of graduation for clarity.'
+                ]
+            },
+            {'category': 'experience', 'score': 8.0, 'justification': 'Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.', 'improvement_suggestions': ['Include more diversity in companies or roles to show broader experience.', 'Highlight specific achievements or outcomes from these roles.'
+                ]
+            },
+            {'category': 'skills', 'score': 9.0, 'justification': 'The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.', 'improvement_suggestions': ['Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization.'
+                ]
+            },
+            {'category': 'personal_projects', 'score': 7.0, 'justification': "Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.", 'improvement_suggestions': ['Provide actual time frames for each project.', 'Include links to live projects or GitHub repositories for users to verify applications.'
+                ]
+            },
+            {'category': 'certifications', 'score': 0.0, 'justification': 'There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.', 'improvement_suggestions': ['Obtain and include relevant certifications to enhance technical credibility.'
+                ]
+            },
+            {'category': 'achievements', 'score': 0.0, 'justification': "No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.", 'improvement_suggestions': ['Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments.'
+                ]
+            },
+            {'category': 'company_projects', 'score': 0.0, 'justification': 'There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.', 'improvement_suggestions': ['Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting.'
+                ]
+            }
+        ]
+    }
     max_score_per_category = 10
-    total_score, component_wise_score = resumeScoreCalculator.calculate_score(dct, max_score_per_category)
+    # total_score, component_wise_score = resumeScoreCalculator.calculate_score(resume_score_description, max_score_per_category)
+    total_score = 58.62
+    resume_component_wise_score = [{'category': 'candidate_information', 'improvement_suggestions': ['Use actual contact details instead of placeholders.', 'Provide direct links to GitHub and LinkedIn profiles for easy access.'], 'justification': "The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.", 'score': 7.5, 'total_score': 10, 'weight': 5},
+{'category': 'education', 'improvement_suggestions': ["Replace 'xx' in CGPA with actual score.", 'Add the month and year of graduation for clarity.'], 'justification': 'The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.', 'score': 6.0, 'total_score': 10, 'weight': 6},
+{'category': 'experience', 'improvement_suggestions': ['Include more diversity in companies or roles to show broader experience.', 'Highlight specific achievements or outcomes from these roles.'], 'justification': 'Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.', 'score': 8.0, 'total_score': 10, 'weight': 9},
+{'category': 'skills', 'improvement_suggestions': ['Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization.'], 'justification': 'The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.', 'score': 9.0, 'total_score': 10, 'weight': 9},
+{'category': 'personal_projects', 'improvement_suggestions': ['Provide actual time frames for each project.', 'Include links to live projects or GitHub repositories for users to verify applications.'], 'justification': "Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.", 'score': 7.0, 'total_score': 10, 'weight': 7},
+{'category': 'certifications', 'improvement_suggestions': ['Obtain and include relevant certifications to enhance technical credibility.'], 'justification': 'There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.', 'score': 0.0, 'total_score': 10, 'weight': 4},
+{'category': 'achievements', 'improvement_suggestions': ['Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments.'], 'justification': "No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.", 'score': 0.0, 'total_score': 10, 'weight': 4},
+{'category': 'company_projects', 'improvement_suggestions': ['Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting.'], 'justification': 'There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.', 'score': 0.0, 'total_score': 10, 'weight': 3}]
     print(total_score)
-    print(component_wise_score)
+    # updated_resume_analysis = resumeScoreCalculator.club_with_suggestions(resume_component_wise_score, resume_score_description)
+    print(resume_component_wise_score)
     x = 1

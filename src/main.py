@@ -181,7 +181,6 @@ async def process_resume(resume_file_path, raw_job_description):
 
         scoring_result["resume_total_score"] = resume_total_score
         scoring_result["resume_component_wise_score"] = resume_component_wise_score
-        scoring_result["resume_score_description"] = resume_score_description
         scoring_result["components"].append("resume_description")
     if raw_job_description:
         extracted_jd = await extract_job_description(job_description=raw_job_description)
@@ -189,7 +188,6 @@ async def process_resume(resume_file_path, raw_job_description):
 
         scoring_result["similarity_total_score"] = similarity_total_score
         scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
-        scoring_result["similarity_score_description"] = similarity_score_description
         scoring_result["components"].append("similarity_description")
     x = 1
     return scoring_result
