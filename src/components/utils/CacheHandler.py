@@ -20,7 +20,7 @@ class CacheHandler:
     def __init__(self, redis_url, redis_port, db, password):
         self.redis_client = redis.Redis(host=redis_url, port=redis_port, db=db, password=password)
 
-    def cache_date(self, key, data, expiry):
+    def cache_data(self, key, data, expiry):
         response = self.redis_client.setex(
             key,
             expiry,
@@ -32,18 +32,19 @@ class CacheHandler:
         value = self.redis_client.get(key)
         # print(value)
         if value:
-            return value.decode('utf-8')
+            return json.loads(value.decode('utf-8'))
 
 
 
 if __name__ == "__main__":
 
     cache_url = "103.180.212.180"
-    cache_port = 8002
+    cache_port = 6379
     # expiry_minutes = 2
     expiry_seconds = 30
     user_id = 112
     cache_db = 0
+    cache_password = "tthP**a9Re"
 
     #
     #
@@ -72,7 +73,7 @@ if __name__ == "__main__":
         # "expire_time": expire_time
     }
 
-    response = cacheHandler.cache_date(key=session_id, data=data, expiry=expire_time)
+    # response = cacheHandler.cache_data(key=session_id, data=data, expiry=expire_time)
     # print("Cached")
     # print(response)
 

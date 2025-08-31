@@ -9,9 +9,13 @@ import sys
 # sys.path.append('components')
  # or sys.path.insert(0, 'path/to/your/folder'))
 
-from src.components.schemas.SimilarityCalculationSchema import SimilarityScoreSchema
-from src.components.prompts.system_prompts import similarity_score_system_prompt
-from src.components.prompts.user_prompts import similarity_score_user_prompt
+# from src.components.schemas.SimilarityCalculationSchema import SimilarityScoreSchema
+# from src.components.prompts.system_prompts import similarity_score_system_prompt
+# from src.components.prompts.user_prompts import similarity_score_user_prompt
+
+from components.schemas.SimilarityCalculationSchema import SimilarityScoreSchema
+from components.prompts.system_prompts import similarity_score_system_prompt
+from components.prompts.user_prompts import similarity_score_user_prompt
 
 from dotenv import load_dotenv
 import os

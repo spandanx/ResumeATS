@@ -1,28 +1,46 @@
 import asyncio
 import json
 
-from src.components.agents.JDExtractionAgent import JDExtractionAgent
-from src.components.agents.ResumeScoringAgent import ResumeScoringAgent
-from src.components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
-from src.components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
-from src.components.utils.ResumeScoreCalculator import ResumeScoreCalculator
-from src.components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
-from src.components.utils.HashHandler import HashHandler
-from src.components.utils.CacheHandler import CacheHandler
+# from src.components.agents.JDExtractionAgent import JDExtractionAgent
+# from src.components.agents.ResumeScoringAgent import ResumeScoringAgent
+# from src.components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
+# from src.components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
+# from src.components.utils.ResumeScoreCalculator import ResumeScoreCalculator
+# from src.components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
+# from src.components.utils.HashHandler import HashHandler
+# from src.components.utils.CacheHandler import CacheHandler
+#
+# from src.components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
+# from src.components.DataExtraction.PDFContentReader import PDFContentReader
 
-from src.components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
-from src.components.DataExtraction.PDFContentReader import PDFContentReader
 
+from components.agents.JDExtractionAgent import JDExtractionAgent
+from components.agents.ResumeScoringAgent import ResumeScoringAgent
+from components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
+from components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
+from components.utils.ResumeScoreCalculator import ResumeScoreCalculator
+from components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
+from components.utils.HashHandler import HashHandler
+from components.utils.CacheHandler import CacheHandler
+
+from components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
+from components.DataExtraction.PDFContentReader import PDFContentReader
+
+
+from datetime import timedelta
 from configparser import ConfigParser
 
 parser = ConfigParser()
+# config_file_path = 'config.properties'
+config_file_path = '../config.properties'
 
-with open('config.properties') as f:
+with open(config_file_path) as f:
     file_content = f.read()
 
 parser.read_string(file_content)
 hashHandler = HashHandler(parser['CACHE']['key'].encode('utf-8'))
 cacheHandler = CacheHandler(parser['CACHE']['url'], parser['CACHE']['port'], parser['CACHE']['db'], parser['CACHE']['password'])
+expire_time = timedelta(minutes=180)
 # print(parser['CACHE']['url'])
 
 '''
@@ -53,20 +71,25 @@ async def extract_job_description(job_description):
 '''
 Extracts the resume data
 '''
-async def extract_resume_description(raw_resume_data):
+async def extract_resume_description(raw_resume_data, username):
     resume_extractor = ResumeDataExtractingAgent()
     resume_data_raw_input = {
         "resume_content": raw_resume_data
     }
-    print("hashHandler", hashHandler)
-    # print("raw_resume_data")
-    # print(raw_resume_data.encode('utf-8'))
     try:
         content_hash = hashHandler.generate_hash(raw_resume_data.encode('utf-8'))
         print("content_hash", content_hash)
 
-        extracted_resume_data = await resume_extractor.extract_resume(resume_data_raw_input)
-        resume_json = json.loads(extracted_resume_data.messages[-1].content)
+        cache_key = "extract_resume_description:" + username + ":" + content_hash
+        cached_resume_json = cacheHandler.get_from_cache(cache_key)
+        if cached_resume_json:
+            print("Found cached extracted resume")
+            return cached_resume_json
+        else:
+            extracted_resume_data = await resume_extractor.extract_resume(resume_data_raw_input)
+            resume_json = json.loads(extracted_resume_data.messages[-1].content)
+            cache_response = cacheHandler.cache_data(data=resume_json, key=cache_key, expiry=expire_time)
+            print("Cached extracted resume for id", cache_key, cache_response)
         # resume_json = {'achievements': [], 'candidate_information': {'contact_number': '+91-xxxxxxxx',
         #                                                              'email_id': 'prashantxxxxx@gmail.com',
         #                                                              'github_profile_link': 'GitHub Profile',
@@ -110,15 +133,14 @@ async def extract_resume_description(raw_resume_data):
         #                           'Nodejs', 'VScode', 'Git', 'Github', 'MongoDb', 'Firebase',
         #                           'Relational Database(mySql)', 'Data Structures & Algorithms', 'Operating Systems',
         #                           'Object Oriented Programming', 'Database Management System', 'Software Engineering']}
-        # return resume_json
-        return None
+            return resume_json
     except Exception as e:
         raise ResumeExtractionException()
 
 '''
 Calculate resume score
 '''
-async def calculate_resume_score(resume_json):
+async def calculate_resume_score(resume_json, username):
     resume_scorer = ResumeScoringAgent()
     weights = {
         "candidate_information": 5,
@@ -131,13 +153,60 @@ async def calculate_resume_score(resume_json):
         "certifications": 4,
         "others": 5
     }
-    resume_scoring_input = {
-        "resume_json": resume_json
-    }
     try:
-        resume_scores = await resume_scorer.score_resume(resume_scoring_input)
-        resume_score_description = json.loads(resume_scores.messages[-1].content)
-        # resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
+        content_hash = hashHandler.generate_hash(json.dumps(resume_json).encode('utf-8'))
+        print("content_hash", content_hash)
+
+        # Complete content caching
+        complete_json_level_cache_key = "calculate_resume_score_complete:" + username + ":" + content_hash
+        cached_resume_json = cacheHandler.get_from_cache(complete_json_level_cache_key)
+        if cached_resume_json:
+            print("Found cached extracted resume")
+            resume_score_description = cached_resume_json
+        else:
+
+            # partial content check
+            uncached_resume_score_json = dict()
+            cached_resume_score_json = dict()
+
+            for key, val in resume_json.items():
+                json_component_hash = hashHandler.generate_hash(json.dumps(val).encode('utf-8'))
+                print("json_component_hash", json_component_hash)
+
+                # component level
+                component_wise_cache_key = "calculate_resume_score_partial_" + key + ":" + username + ":" + json_component_hash
+                cached_resume_json = cacheHandler.get_from_cache(component_wise_cache_key)
+                if cached_resume_json:
+                    print("Found cached resume score, component - " + key)
+                    cached_resume_score_json[key] = cached_resume_json
+                else:
+                    uncached_resume_score_json[key] = val
+
+            # Keep only uncached sections, will join with cached sections at the end
+            resume_scoring_input = {
+                "resume_json": uncached_resume_score_json
+            }
+            resume_scores = await resume_scorer.score_resume(resume_scoring_input)
+            resume_score_description = json.loads(resume_scores.messages[-1].content)
+
+            # Cache uncached components
+            for key, val in uncached_resume_score_json.items():
+                # generate hash and link input to the output.
+                component_input_content = val
+                json_component_wise_hash = hashHandler.generate_hash(json.dumps(component_input_content).encode('utf-8'))
+
+                component_wise_cache_key = "calculate_resume_score_partial_" + key + ":" + username + ":" + json_component_wise_hash
+                cache_response = cacheHandler.cache_data(key=component_wise_cache_key, data=val, expiry=expire_time)
+                print("Cached extracted resume for id", component_wise_cache_key, cache_response)
+
+            # Join with cached sections
+            for key, val in cached_resume_score_json.items():
+                resume_score_description["scoring_sections"].append(val)
+            # resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
+
+            cache_response = cacheHandler.cache_data(data=resume_score_description, key=complete_json_level_cache_key,
+                                                     expiry=expire_time)
+            print("Cached complete resume score", complete_json_level_cache_key, cache_response)
 
         resumeScoreCalculator = ResumeScoreCalculator(weights)
         max_score_per_category = 10
@@ -177,24 +246,24 @@ async def jd_resume_similarity_score_calculator(jd_json, resume_json):
 '''
 Extract the resume data, job description and calculate resume and similarity score 
 '''
-async def process_resume(resume_file_path, raw_job_description):
+async def process_resume(resume_file_path, raw_job_description, username):
     scoring_result = dict()
     scoring_result["components"] = []
     if resume_file_path:
         resume_content = await read_pdf(resume_file_path)
-        extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content)
-        resume_total_score, resume_component_wise_score, resume_score_description = await calculate_resume_score(resume_json = extracted_resume_json)
+        extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content, username=username)
+        resume_total_score, resume_component_wise_score, resume_score_description = await calculate_resume_score(resume_json = extracted_resume_json, username=username)
 
         scoring_result["resume_total_score"] = resume_total_score
         scoring_result["resume_component_wise_score"] = resume_component_wise_score
         scoring_result["components"].append("resume_description")
-    if raw_job_description:
-        extracted_jd = await extract_job_description(job_description=raw_job_description)
-        similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
-
-        scoring_result["similarity_total_score"] = similarity_total_score
-        scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
-        scoring_result["components"].append("similarity_description")
+    # if raw_job_description:
+    #     extracted_jd = await extract_job_description(job_description=raw_job_description)
+    #     similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
+    #
+    #     scoring_result["similarity_total_score"] = similarity_total_score
+    #     scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
+    #     scoring_result["components"].append("similarity_description")
     x = 1
     return scoring_result
 
@@ -318,6 +387,7 @@ if __name__ == "__main__":
     Maven
     Unit Testing
     """
-    file_path = "C:\\Users\\Spandan\\Downloads\\70__ATS_rating_Resume_Template.pdf"
-    # response = asyncio.run(process_resume(resume_file_path=file_path, raw_job_description=job_description))
-    # print(response)
+    file_path = "C:\\Users\\Spandan\\Downloads\\70__ATS_rating_Resume_Template_test.pdf"
+    username = "user123"
+    response = asyncio.run(process_resume(resume_file_path=file_path, raw_job_description=job_description, username=username))
+    print(response)
