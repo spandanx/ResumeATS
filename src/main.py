@@ -38,8 +38,14 @@ with open(config_file_path) as f:
     file_content = f.read()
 
 parser.read_string(file_content)
-hashHandler = HashHandler(parser['CACHE']['key'].encode('utf-8'))
-cacheHandler = CacheHandler(parser['CACHE']['url'], parser['CACHE']['port'], parser['CACHE']['db'], parser['CACHE']['password'])
+hashHandler = HashHandler(parser['CACHE']['cache_key'].encode('utf-8'))
+
+
+cacheHandler = CacheHandler(redis_url=parser['CACHE']['cache_url'], redis_port=parser['CACHE']['cache_port'],
+                            redis_db=parser['CACHE']['cache_db'], redis_password=parser['CACHE']['cache_password'],
+                            db_hostname=parser['MONGODB']['mongodb_hostname'], db_port=parser['MONGODB']['mongodb_port'],
+                            db_username=parser['MONGODB']['mongodb_username'], db_password=parser['MONGODB']['mongodb_password'],
+                            db_database=parser['MONGODB']['mongodb_database'], db_keyspace=parser['MONGODB']['mongodb_keyspace'])
 expire_time = timedelta(minutes=180)
 # print(parser['CACHE']['url'])
 
@@ -71,7 +77,7 @@ async def extract_job_description(job_description):
 '''
 Extracts the resume data
 '''
-async def extract_resume_description(raw_resume_data, username):
+async def extract_resume_description(raw_resume_data, username, expiry):
     resume_extractor = ResumeDataExtractingAgent()
     resume_data_raw_input = {
         "resume_content": raw_resume_data
@@ -81,14 +87,14 @@ async def extract_resume_description(raw_resume_data, username):
         print("content_hash", content_hash)
 
         cache_key = "extract_resume_description:" + username + ":" + content_hash
-        cached_resume_json = cacheHandler.get_from_cache(cache_key)
+        cached_resume_json = cacheHandler.get_from_cache(cache_key, username, expiry)
         if cached_resume_json:
             print("Found cached extracted resume")
             return cached_resume_json
         else:
             extracted_resume_data = await resume_extractor.extract_resume(resume_data_raw_input)
             resume_json = json.loads(extracted_resume_data.messages[-1].content)
-            cache_response = cacheHandler.cache_data(data=resume_json, key=cache_key, expiry=expire_time)
+            cache_response = cacheHandler.cache_data(data=resume_json, key=cache_key, expiry=expire_time, username=username)
             print("Cached extracted resume for id", cache_key, cache_response)
         # resume_json = {'achievements': [], 'candidate_information': {'contact_number': '+91-xxxxxxxx',
         #                                                              'email_id': 'prashantxxxxx@gmail.com',
@@ -159,7 +165,7 @@ async def calculate_resume_score(resume_json, username):
 
         # Complete content caching
         complete_json_level_cache_key = "calculate_resume_score_complete:" + username + ":" + content_hash
-        cached_resume_json = cacheHandler.get_from_cache(complete_json_level_cache_key)
+        cached_resume_json = cacheHandler.get_from_cache(complete_json_level_cache_key, username=username, expiry=expire_time)
         if cached_resume_json:
             print("Found cached extracted resume")
             resume_score_description = cached_resume_json
@@ -175,7 +181,7 @@ async def calculate_resume_score(resume_json, username):
 
                 # component level
                 component_wise_cache_key = "calculate_resume_score_partial_" + key + ":" + username + ":" + json_component_hash
-                cached_resume_json = cacheHandler.get_from_cache(component_wise_cache_key)
+                cached_resume_json = cacheHandler.get_from_cache(component_wise_cache_key, username=username, expiry=expire_time)
                 if cached_resume_json:
                     print("Found cached resume score, component - " + key)
                     cached_resume_score_json[key] = cached_resume_json
@@ -196,7 +202,7 @@ async def calculate_resume_score(resume_json, username):
                 json_component_wise_hash = hashHandler.generate_hash(json.dumps(component_input_content).encode('utf-8'))
 
                 component_wise_cache_key = "calculate_resume_score_partial_" + key + ":" + username + ":" + json_component_wise_hash
-                cache_response = cacheHandler.cache_data(key=component_wise_cache_key, data=val, expiry=expire_time)
+                cache_response = cacheHandler.cache_data(key=component_wise_cache_key, data=val, expiry=expire_time, username=username)
                 print("Cached extracted resume for id", component_wise_cache_key, cache_response)
 
             # Join with cached sections
@@ -205,7 +211,7 @@ async def calculate_resume_score(resume_json, username):
             # resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
 
             cache_response = cacheHandler.cache_data(data=resume_score_description, key=complete_json_level_cache_key,
-                                                     expiry=expire_time)
+                                                     expiry=expire_time, username=username)
             print("Cached complete resume score", complete_json_level_cache_key, cache_response)
 
         resumeScoreCalculator = ResumeScoreCalculator(weights)
@@ -251,7 +257,7 @@ async def process_resume(resume_file_path, raw_job_description, username):
     scoring_result["components"] = []
     if resume_file_path:
         resume_content = await read_pdf(resume_file_path)
-        extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content, username=username)
+        extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content, username=username, expiry=expire_time)
         resume_total_score, resume_component_wise_score, resume_score_description = await calculate_resume_score(resume_json = extracted_resume_json, username=username)
 
         scoring_result["resume_total_score"] = resume_total_score

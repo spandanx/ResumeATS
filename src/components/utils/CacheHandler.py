@@ -1,69 +1,54 @@
 import redis
 from datetime import datetime, timedelta
 import json
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, DateTime, Text, Integer, Boolean, UUID
-import uuid
-from sqlalchemy.orm import Session
-
-# Base = declarative_base()
-# class ChatSession(Base):
-#     __tablename__ = "chat_session"
-#     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-#     user_id = Column(String, nullable=False)
-#     info = Column(String, nullable=True)
-#     created_at = Column(DateTime, default=datetime.utcnow)
-#     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-#     is_active = Column(Boolean, default=True)
+from components.memory_cache.MemCache import MemCache
+from components.db_cache.DBCache import DBCache
 
 class CacheHandler:
-    def __init__(self, redis_url, redis_port, db, password):
-        self.redis_client = redis.Redis(host=redis_url, port=redis_port, db=db, password=password)
+    def __init__(self, redis_url, redis_port, redis_db, redis_password,
+                 db_username, db_password, db_hostname, db_database, db_keyspace, db_port):
+        self.mem_cache = MemCache(redis_url=redis_url, redis_port=redis_port, redis_db=redis_db, redis_password=redis_password)
+        self.db_cache = DBCache(username=db_username, password=db_password, hostname=db_hostname,
+                                database=db_database, keyspace=db_keyspace, port=db_port)
 
-    def cache_data(self, key, data, expiry):
-        response = self.redis_client.setex(
-            key,
-            expiry,
-            json.dumps(data)
-        )
+    def cache_data(self, key, data, expiry, username):
+        insert_data = {
+            "key": key,
+            "data": data,
+            "username": username
+        }
+        db_insery_response = self.db_cache.insert_record(insert_data)
+        response = self.mem_cache.cache_data(key, data, expiry)
         return response
 
-    def get_from_cache(self, key):
-        value = self.redis_client.get(key)
-        # print(value)
-        if value:
-            return json.loads(value.decode('utf-8'))
+    def get_from_cache(self, key, username, expiry):
+        cached_data = self.mem_cache.get_from_cache(key)
+        if cached_data is None:
+            db_response = self.db_cache.get_record(key)
+            if db_response is not None:
+                cached_db_data = db_response["data"]
+
+                # Insert back to the cache
+                db_insery_response = self.mem_cache.cache_data(key, cached_db_data, expiry)
+                return cached_db_data
+        return cached_data
 
 
 
 if __name__ == "__main__":
 
-    cache_url = "103.180.212.180"
+    cache_url = ""
     cache_port = 6379
     # expiry_minutes = 2
     expiry_seconds = 30
     user_id = 112
     cache_db = 0
-    cache_password = "tthP**a9Re"
-
-    #
-    #
-    # config.read('config.properties')
-    # cache_url = config['cache']['url']
-    # cache_key = config['cache']['key']
-    # cache_port = config['cache']['port']
-    # cache_password = config['cache']['password']
-    # cache_db = config['cache']['db']
+    cache_password = ""
 
     cacheHandler = CacheHandler(cache_url, cache_port, cache_db, cache_password)
 
     expire_time = timedelta(seconds=expiry_seconds)
 
-    # redis_client = redis.from_url(redis_url)
-    # redis_client = redis.Redis(host=redis_url, port=redis_port, db=0)
-    # session_data = {"db_session_id": str(db_session.id)}
-
-    # session_id = f"session:{user_id}:{datetime.utcnow().isoformat()}"
     session_id = "sample_key"
 
     data = {
@@ -72,12 +57,6 @@ if __name__ == "__main__":
         "last_activity": datetime.utcnow().isoformat(),
         # "expire_time": expire_time
     }
-
-    # response = cacheHandler.cache_data(key=session_id, data=data, expiry=expire_time)
-    # print("Cached")
-    # print(response)
-
-    # redis_client.set(session_id, json.dumps(data))
 
     session_id = "sample_key"
     print(cacheHandler.get_from_cache(session_id))
