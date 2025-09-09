@@ -28,7 +28,7 @@ class CacheHandler:
             if db_response is not None:
                 cached_db_data = db_response["data"]
 
-                # Insert back to the cache
+                # Insert to the cache
                 db_insery_response = self.mem_cache.cache_data(key, cached_db_data, expiry)
                 return cached_db_data
         return cached_data

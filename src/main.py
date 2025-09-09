@@ -60,16 +60,29 @@ async def read_pdf(file_path):
 '''
 Extracts the job description data
 '''
-async def extract_job_description(job_description):
+async def extract_job_description(job_description, username, expiry):
     jdExtractionAgent = JDExtractionAgent()
     job_description_raw_input = {
         "job_description": job_description
     }
+
     try:
-        extracted_jd_data = await jdExtractionAgent.extract_job_description(job_description_raw_input)
-        jd_json = json.loads(extracted_jd_data.messages[-1].content)
-        # jd_json = {"responsibilities":["Develop, test, and maintain web applications using Java and Spring Boot.","Collaborate with cross-functional teams to define and implement new features.","Ensure the performance, quality, and responsiveness of applications.","Identify and correct bottlenecks and fix bugs.","Document development processes, coding standards, and project requirements.","Participate in code reviews to ensure adherence to best practices and coding standards.","Stay up-to-date with emerging technologies and industry trends."],"skills":["Java","Spring Boot","Hibernate","RESTful APIs","SQL","Git","Maven","Unit Testing"],"qualifications":["Bachelor's degree in Computer Science, Information Technology, or related field.","Proven experience as a Java Developer, with expertise in Spring Boot.","Strong understanding of object-oriented programming principles and design patterns.","Experience with databases such as MySQL, PostgreSQL, or MongoDB.","Knowledge of front-end technologies like HTML, CSS, and JavaScript is a plus.","Excellent problem-solving skills and attention to detail.","Good communication and teamwork abilities."],"experience":[],"salary":"Not Mentioned","certifications":[]}
-        return jd_json
+        content_hash = hashHandler.generate_hash(job_description.encode('utf-8'))
+        print("content_hash", content_hash)
+
+        cache_key = "extract_jd_description:" + username + ":" + content_hash
+        cached_jd_json = cacheHandler.get_from_cache(cache_key, username, expiry)
+        if cached_jd_json:
+            print("Found cached extracted job description")
+            return cached_jd_json
+        else:
+            extracted_jd_data = await jdExtractionAgent.extract_job_description(job_description_raw_input)
+            jd_json = json.loads(extracted_jd_data.messages[-1].content)
+            # jd_json = {"responsibilities":["Develop, test, and maintain web applications using Java and Spring Boot.","Collaborate with cross-functional teams to define and implement new features.","Ensure the performance, quality, and responsiveness of applications.","Identify and correct bottlenecks and fix bugs.","Document development processes, coding standards, and project requirements.","Participate in code reviews to ensure adherence to best practices and coding standards.","Stay up-to-date with emerging technologies and industry trends."],"skills":["Java","Spring Boot","Hibernate","RESTful APIs","SQL","Git","Maven","Unit Testing"],"qualifications":["Bachelor's degree in Computer Science, Information Technology, or related field.","Proven experience as a Java Developer, with expertise in Spring Boot.","Strong understanding of object-oriented programming principles and design patterns.","Experience with databases such as MySQL, PostgreSQL, or MongoDB.","Knowledge of front-end technologies like HTML, CSS, and JavaScript is a plus.","Excellent problem-solving skills and attention to detail.","Good communication and teamwork abilities."],"experience":[],"salary":"Not Mentioned","certifications":[]}
+            cache_response = cacheHandler.cache_data(data=jd_json, key=cache_key, expiry=expire_time,
+                                                     username=username)
+            print("Cached extracted resume for id", cache_key, cache_response)
+            return jd_json
     except Exception as e:
         raise JDExtractionException()
 
@@ -170,7 +183,6 @@ async def calculate_resume_score(resume_json, username):
             print("Found cached extracted resume")
             resume_score_description = cached_resume_json
         else:
-
             # partial content check
             uncached_resume_score_json = dict()
             cached_resume_score_json = dict()
@@ -195,15 +207,19 @@ async def calculate_resume_score(resume_json, username):
             resume_scores = await resume_scorer.score_resume(resume_scoring_input)
             resume_score_description = json.loads(resume_scores.messages[-1].content)
 
-            # Cache uncached components
-            for key, val in uncached_resume_score_json.items():
-                # generate hash and link input to the output.
-                component_input_content = val
-                json_component_wise_hash = hashHandler.generate_hash(json.dumps(component_input_content).encode('utf-8'))
+            if "scoring_sections" in resume_score_description:
+                # Cache uncached components
+                for key, val in uncached_resume_score_json.items():
+                    # generate hash and link input to the output.
+                    component_input_content = val
+                    component_cache_content_filtered = [section for section in resume_score_description["scoring_sections"] if section["category"]==key]
+                    if len(component_cache_content_filtered)>0:
+                        json_component_wise_hash = hashHandler.generate_hash(json.dumps(component_input_content).encode('utf-8'))
 
-                component_wise_cache_key = "calculate_resume_score_partial_" + key + ":" + username + ":" + json_component_wise_hash
-                cache_response = cacheHandler.cache_data(key=component_wise_cache_key, data=val, expiry=expire_time, username=username)
-                print("Cached extracted resume for id", component_wise_cache_key, cache_response)
+                        component_cache_content_json = component_cache_content_filtered[0]
+                        component_wise_cache_key = "calculate_resume_score_partial_" + key + ":" + username + ":" + json_component_wise_hash
+                        cache_response = cacheHandler.cache_data(key=component_wise_cache_key, data=component_cache_content_json, expiry=expire_time, username=username)
+                        print("Cached extracted resume for id", component_wise_cache_key, cache_response)
 
             # Join with cached sections
             for key, val in cached_resume_score_json.items():
@@ -221,32 +237,107 @@ async def calculate_resume_score(resume_json, username):
         ## Update scoring data and include weights for those
         return resume_score, component_wise_score, resume_score_description
     except Exception as e:
-        raise ResumeScoringException()
+        raise ResumeScoringException(f"Could not calculate score for the components in the resume!, {e}")
 
 '''
 Calculates the similarity score between the job description and resume content
 '''
 async def jd_resume_similarity_score_calculator(jd_json, resume_json):
     similarityScoreCalculationAgent = SimilarityScoreCalculationAgent()
+
+    weights = {
+        "experience": 8,
+        "skills": 9,
+        "projects": 7,
+        "others": 5
+    }
+
     similarity_score_input = {
         "job_description": jd_json,
         "resume_json": resume_json
     }
     try:
-        extracted_similarity_data = await similarityScoreCalculationAgent.calculate_similarity_score(similarity_score_input)
-        similarity_score_description = json.loads(extracted_similarity_data.messages[-1].content)
-        # similarity_score_description = {"scoring_sections":[{"category":"Skills","similarity_score":4,"justification":"The candidate has experience with Git, HTML, and JavaScript which overlap with some of the skills listed in the job description. However, they lack direct experience in Java, Spring Boot, Hibernate, RESTful APIs, and SQL, which greatly reduces the score.","suggestions":["Gain experience with Java and Spring Boot through coursework or personal projects.","Complete relevant certifications or online courses focusing on RESTful APIs and SQL."]},{"category":"Experience","similarity_score":2,"justification":"The candidate's experience primarily revolves around cloud computing and cybersecurity, which are not directly aligned with the Java Developer role that emphasizes web application development. Their projects do not demonstrate relevant experience with the required technologies.","suggestions":["Seek internships or projects specifically focused on Java, Spring Boot, and web application development.","Participate in hackathons or coding competitions that involve Java development."]},{"category":"Projects","similarity_score":3,"justification":"While the candidate has relevant personal projects that involve web development components, they do not specifically align with the technologies and frameworks stated in the job description, such as Java or Spring Boot. The projects utilize React and Firebase instead.","suggestions":["Develop a project that utilizes Java and Spring Boot to showcase relevant skills.","Participate in collaborative coding projects with an emphasis on Java to broaden project experience."]},{"category":"Qualifications","similarity_score":6,"justification":"The candidate holds a Bachelor of Technology in Computer Science, which meets the educational requirement listed in the job description. They also possess a general understanding of object-oriented principles but lack specific experience in Java or Spring Boot.","suggestions":["Consider pursuing further education or certifications in Java/Spring Boot development to strengthen qualifications.","Engage in coursework that enhances knowledge of design patterns and databases."]}]}
-        weights = {
-            "experience": 8,
-            "skills": 9,
-            "projects": 7,
-            "others": 5
-        }
+        ################## Hashing code
+        content_hash = hashHandler.generate_hash(json.dumps(similarity_score_input).encode('utf-8'))
+        print("content_hash", content_hash)
+
+        complete_jd_json_level_cache_key = "calculate_jd_score_complete:" + username + ":" + content_hash
+        cached_jd_json = cacheHandler.get_from_cache(complete_jd_json_level_cache_key, username=username,
+                                                         expiry=expire_time)
+        if cached_jd_json:
+            print("Found cached extracted job description")
+            similarity_score_description = cached_jd_json
+        else:
+            uncached_jd_score_json = dict()
+            cached_jd_score_json = dict()
+
+            #################### Check JD cache component-wise
+            for key, val in jd_json.items():
+                json_component_hash = hashHandler.generate_hash(json.dumps(val).encode('utf-8'))
+                print("json_component_hash", json_component_hash)
+
+                # component level
+                component_wise_cache_key = "calculate_jd_score_partial_" + key + ":" + username + ":" + json_component_hash
+                cached_resume_json = cacheHandler.get_from_cache(component_wise_cache_key, username=username, expiry=expire_time)
+                if cached_resume_json:
+                    print("Found cached resume score, component - " + key)
+                    cached_jd_score_json[key] = cached_resume_json
+                else:
+                    uncached_jd_score_json[key] = val
+
+            #################### Check JD cache component-wise
+
+            similarity_jd_score_input = {
+                "job_description": uncached_jd_score_json,
+                "resume_json": resume_json
+            }
+
+            extracted_similarity_data = await similarityScoreCalculationAgent.calculate_similarity_score(
+                similarity_jd_score_input)
+            similarity_score_description = json.loads(extracted_similarity_data.messages[-1].content)
+            # similarity_score_description = {"scoring_sections":[{"category":"Skills","similarity_score":4,"justification":"The candidate has experience with Git, HTML, and JavaScript which overlap with some of the skills listed in the job description. However, they lack direct experience in Java, Spring Boot, Hibernate, RESTful APIs, and SQL, which greatly reduces the score.","suggestions":["Gain experience with Java and Spring Boot through coursework or personal projects.","Complete relevant certifications or online courses focusing on RESTful APIs and SQL."]},{"category":"Experience","similarity_score":2,"justification":"The candidate's experience primarily revolves around cloud computing and cybersecurity, which are not directly aligned with the Java Developer role that emphasizes web application development. Their projects do not demonstrate relevant experience with the required technologies.","suggestions":["Seek internships or projects specifically focused on Java, Spring Boot, and web application development.","Participate in hackathons or coding competitions that involve Java development."]},{"category":"Projects","similarity_score":3,"justification":"While the candidate has relevant personal projects that involve web development components, they do not specifically align with the technologies and frameworks stated in the job description, such as Java or Spring Boot. The projects utilize React and Firebase instead.","suggestions":["Develop a project that utilizes Java and Spring Boot to showcase relevant skills.","Participate in collaborative coding projects with an emphasis on Java to broaden project experience."]},{"category":"Qualifications","similarity_score":6,"justification":"The candidate holds a Bachelor of Technology in Computer Science, which meets the educational requirement listed in the job description. They also possess a general understanding of object-oriented principles but lack specific experience in Java or Spring Boot.","suggestions":["Consider pursuing further education or certifications in Java/Spring Boot development to strengthen qualifications.","Engage in coursework that enhances knowledge of design patterns and databases."]}]}
+
+            if "scoring_sections" in similarity_score_description:
+                # Cache uncached components
+                for key, val in uncached_jd_score_json.items():
+                    # generate hash and link input to the output.
+                    component_input_content = val
+                    component_cache_content_filtered = [section for section in
+                                                        similarity_score_description["scoring_sections"] if
+                                                        section["category"] == key]
+                    if len(component_cache_content_filtered) > 0:
+                        json_component_wise_hash = hashHandler.generate_hash(
+                            json.dumps(component_input_content).encode('utf-8'))
+
+                        component_cache_content_json = component_cache_content_filtered[0]
+
+                        component_wise_cache_key = "calculate_jd_score_partial_" + key + ":" + username + ":" + json_component_wise_hash
+                        cache_response = cacheHandler.cache_data(key=component_wise_cache_key, data=component_cache_content_json, expiry=expire_time,
+                                                                 username=username)
+                        print("Cached extracted resume for id", component_wise_cache_key, cache_response)
+
+            # Join with cached sections
+            for key, val in cached_jd_score_json.items():
+                similarity_score_description["scoring_sections"].append(val)
+            # resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
+
+            cache_response = cacheHandler.cache_data(data=similarity_score_description,
+                                                     key=complete_jd_json_level_cache_key,
+                                                     expiry=expire_time, username=username)
+            print("Cached complete resume score", complete_jd_json_level_cache_key, cache_response)
+
+
         jdResumeSimilarityScoreCalculator = JDResumeSimilarityScoreCalculator(weights)
-        total_score, component_wise_score = jdResumeSimilarityScoreCalculator.calculate_score(score_info=similarity_score_description, max_score_per_category=10)
+        total_score, component_wise_score = jdResumeSimilarityScoreCalculator.calculate_score(
+            score_info=similarity_score_description, max_score_per_category=10)
+
+
         return total_score, component_wise_score, similarity_score_description
+
+        ################## Hashing code
+
     except Exception as e:
-        raise SimilarityCalculationException()
+        raise SimilarityCalculationException(f"Could not calculate the similarity score between job description and resume!, {e}")
 
 
 '''
@@ -263,13 +354,13 @@ async def process_resume(resume_file_path, raw_job_description, username):
         scoring_result["resume_total_score"] = resume_total_score
         scoring_result["resume_component_wise_score"] = resume_component_wise_score
         scoring_result["components"].append("resume_description")
-    # if raw_job_description:
-    #     extracted_jd = await extract_job_description(job_description=raw_job_description)
-    #     similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
-    #
-    #     scoring_result["similarity_total_score"] = similarity_total_score
-    #     scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
-    #     scoring_result["components"].append("similarity_description")
+    if raw_job_description:
+        extracted_jd = await extract_job_description(job_description=raw_job_description, username=username, expiry=expire_time)
+        similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
+
+        scoring_result["similarity_total_score"] = similarity_total_score
+        scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
+        scoring_result["components"].append("similarity_description")
     x = 1
     return scoring_result
 
