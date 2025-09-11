@@ -5,10 +5,21 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 import asyncio
 import sys
-# sys.path.append("..")
-# sys.path.append('components')
-# sys.path.append('src.components')
- # or sys.path.insert(0, 'path/to/your/folder'))
+
+# sys.path.append("src")
+
+# from ..utils.common import get_caller_file_name
+#
+# source_file_name = get_caller_file_name()
+# # print("source_file_name")
+# # print(source_file_name)
+#
+# if source_file_name == "ui.py":
+#     sys.path.append("src")
+#     # print("Adding src prefix")
+
+
+
 
 # from src.components.schemas.JobDescriptionSchema import JobDescription
 # from src.components.prompts.system_prompts import job_description_system_prompt

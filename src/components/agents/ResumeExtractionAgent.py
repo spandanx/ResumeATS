@@ -13,6 +13,7 @@ import sys
 # sys.path.append('components')
  # or sys.path.insert(0, 'path/to/your/folder'))
 
+
 # from src.components.schemas.ResumeSchema import Resume, Candidate
 # from src.components.prompts.system_prompts import complete_resume_extraction_system_prompt
 # from src.components.prompts.user_prompts import complete_resume_extraction_user_prompt

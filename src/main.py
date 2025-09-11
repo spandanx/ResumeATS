@@ -1,5 +1,35 @@
 import asyncio
 import json
+import inspect
+import os
+import sys
+
+def get_caller_file_name():
+    call_stack = inspect.stack()
+    call_filenames = [stack.filename for stack in call_stack if stack.filename.endswith(".py")]
+    print("Caller filename stack")
+    for fname in call_filenames:
+        print(fname)
+    common_file_name = "resume-ats-app"
+    filtered_filenames = [filename for filename in call_filenames if filename.endswith(".py") and common_file_name in filename]
+    if len(filtered_filenames)==0:
+        return "Not Found"
+    caller_filename = os.path.basename(filtered_filenames[-1])
+    return caller_filename
+
+source_file_name = get_caller_file_name()
+print("source_file_name")
+print(source_file_name)
+
+if source_file_name == "ui.py":
+    # sys.path.append("src")
+    config_file_path = 'config.properties'
+    print("configuring for ui.py caller")
+    sys.path.append("src")
+else:
+    config_file_path = '../config.properties'
+
+
 
 # from src.components.agents.JDExtractionAgent import JDExtractionAgent
 # from src.components.agents.ResumeScoringAgent import ResumeScoringAgent
@@ -31,8 +61,6 @@ from datetime import timedelta
 from configparser import ConfigParser
 
 parser = ConfigParser()
-# config_file_path = 'config.properties'
-config_file_path = '../config.properties'
 
 with open(config_file_path) as f:
     file_content = f.read()
@@ -242,7 +270,7 @@ async def calculate_resume_score(resume_json, username):
 '''
 Calculates the similarity score between the job description and resume content
 '''
-async def jd_resume_similarity_score_calculator(jd_json, resume_json):
+async def jd_resume_similarity_score_calculator(jd_json, resume_json, username):
     similarityScoreCalculationAgent = SimilarityScoreCalculationAgent()
 
     weights = {
@@ -354,13 +382,14 @@ async def process_resume(resume_file_path, raw_job_description, username):
         scoring_result["resume_total_score"] = resume_total_score
         scoring_result["resume_component_wise_score"] = resume_component_wise_score
         scoring_result["components"].append("resume_description")
-    if raw_job_description:
-        extracted_jd = await extract_job_description(job_description=raw_job_description, username=username, expiry=expire_time)
-        similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd)
 
-        scoring_result["similarity_total_score"] = similarity_total_score
-        scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
-        scoring_result["components"].append("similarity_description")
+        if raw_job_description:
+            extracted_jd = await extract_job_description(job_description=raw_job_description, username=username, expiry=expire_time)
+            similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd, username=username)
+
+            scoring_result["similarity_total_score"] = similarity_total_score
+            scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
+            scoring_result["components"].append("similarity_description")
     x = 1
     return scoring_result
 

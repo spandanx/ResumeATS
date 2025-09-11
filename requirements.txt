@@ -1,8 +1,9 @@
-PyPDF2
-unstructured
-unstructured[local-inference]
 pdfminer.six
 pi-heif
 streamlit
 plotly
 pymongo[srv]
+pyautogen
+autogen-ext[openai]
+python-dotenv
+redis
