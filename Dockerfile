@@ -1,6 +1,4 @@
-# Use a lightweight Python base image
-# python:3.11-alpine
-# python:3.9-slim-buster
+# Python base image
 FROM python:3.10-slim-buster
 
 # Set the working directory inside the container
@@ -16,5 +14,5 @@ COPY . .
 # Expose the port FastAPI will run on
 EXPOSE 8501
 
-# Command to run the FastAPI application with Uvicorn
+# Command to run the Streamlit application
 CMD ["streamlit", "run", "ui.py"]
