@@ -24,7 +24,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          tags: ${{ secrets.DOCKER_USERNAME }}/python-app:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.4
           push: true
 
   deploy:
@@ -44,6 +44,4 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          ls
-          dir
-          kubectl apply -f ats-deployment.yaml -n ats-space
+          kubectl apply -f deployment/ats-deployment.yaml -n ats-space
