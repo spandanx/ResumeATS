@@ -22,6 +22,7 @@ st.set_page_config(layout="wide")
 st.markdown("""
 This application calculates resume score and gets you suggestion on the possible changes in the resume.
 It also reads job descriptions and calculates similarity score.
+Version: 1.4
 """)
 
 input_tab, analytics_tab = st.tabs(["Resume Input", "Analytics"])
