@@ -26,8 +26,10 @@ if source_file_name == "ui.py":
     config_file_path = 'config.properties'
     print("configuring for ui.py caller")
     sys.path.append("src")
-else:
+elif source_file_name == "main.py":
     config_file_path = '../config.properties'
+else:
+    config_file_path = 'config.properties'
 
 
 

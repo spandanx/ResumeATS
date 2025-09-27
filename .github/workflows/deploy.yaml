@@ -27,7 +27,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.7
+          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.8
 
 #      - name: Build and push
 #        uses: docker/build-push-action@v5
