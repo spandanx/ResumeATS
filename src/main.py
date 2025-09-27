@@ -4,12 +4,18 @@ import inspect
 import os
 import sys
 
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 def get_caller_file_name():
     call_stack = inspect.stack()
     call_filenames = [stack.filename for stack in call_stack if stack.filename.endswith(".py")]
-    print("Caller filename stack")
+    # print("Caller filename stack")
+    logger.info("Caller filename stack")
     for fname in call_filenames:
-        print(fname)
+        logger.info(fname)
+        # print(fname)
     common_file_name = "resume-ats-app"
     filtered_filenames = [filename for filename in call_filenames if filename.endswith(".py") and common_file_name in filename]
     if len(filtered_filenames)==0:
@@ -18,18 +24,23 @@ def get_caller_file_name():
     return caller_filename
 
 source_file_name = get_caller_file_name()
-print("source_file_name")
-print(source_file_name)
+# print("source_file_name")
+# print(source_file_name)
+logger.info("source_file_name")
+logger.info(source_file_name)
 
 if source_file_name == "ui.py":
     # sys.path.append("src")
     config_file_path = 'config.properties'
-    print("configuring for ui.py caller")
+    # print("configuring for ui.py caller")
+    logger.info("configuring for ui.py caller")
     sys.path.append("src")
 elif source_file_name == "main.py":
     config_file_path = '../config.properties'
+    logger.info("configuring for main.py caller")
 else:
     config_file_path = 'config.properties'
+    logger.info("configuring for other callers")
 
 
 
