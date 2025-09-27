@@ -35,7 +35,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.5
+          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.6
           push: true
 
   deploy:
