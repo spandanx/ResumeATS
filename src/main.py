@@ -32,6 +32,14 @@ logger.info(source_file_name)
 current_working_directory = os.getcwd()
 logger.info(f"Current working directory (using os.getcwd()): {current_working_directory}")
 
+all_entries = os.listdir('.')
+
+# Filter the list to include only directories
+directories = [entry for entry in all_entries if os.path.isdir(os.path.join('.', entry))]
+
+# Print the list of directories
+logger.info(directories)
+
 if source_file_name == "ui.py":
     # sys.path.append("src")
     config_file_path = 'config.properties'
