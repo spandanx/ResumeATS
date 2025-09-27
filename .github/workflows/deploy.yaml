@@ -44,6 +44,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          echo dir
+          ls
+          dir
           kubectl apply -f k8s/
           kubectl set image deployment/python-app-deployment python-app-container=${{ secrets.DOCKER_USERNAME }}/python-app:latest
