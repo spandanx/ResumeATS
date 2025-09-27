@@ -48,3 +48,17 @@ jobs:
             kind --version
             kubectl version --client --output=yaml
             docker ps -a
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+
+      - name: Deploy to Kubernetes
+        run: |
+          docker ps -a
+          docker --version
+          kind --version
+          kubectl version --client --output=yaml
