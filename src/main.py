@@ -29,6 +29,9 @@ source_file_name = get_caller_file_name()
 logger.info("source_file_name")
 logger.info(source_file_name)
 
+current_working_directory = os.getcwd()
+logger.info(f"Current working directory (using os.getcwd()): {current_working_directory}")
+
 if source_file_name == "ui.py":
     # sys.path.append("src")
     config_file_path = 'config.properties'
