@@ -29,16 +29,19 @@ source_file_name = get_caller_file_name()
 logger.info("source_file_name")
 logger.info(source_file_name)
 
-current_working_directory = os.getcwd()
-logger.info(f"Current working directory (using os.getcwd()): {current_working_directory}")
+current_directory = os.getcwd()
+logger.info(f"Current working directory: {current_directory}")
 
-all_entries = os.listdir('.')
+# List all files and directories in the current directory
+contents = os.listdir(current_directory)
 
-# Filter the list to include only directories
-directories = [entry for entry in all_entries if os.path.isdir(os.path.join('.', entry))]
-
-# Print the list of directories
-logger.info(directories)
+logger.info("\nFiles and Directories (distinguished):")
+for item in contents:
+    path = os.path.join(current_directory, item)
+    if os.path.isfile(path):
+        logger.info(f"File: {item}")
+    elif os.path.isdir(path):
+        logger.info(f"Directory: {item}")
 
 if source_file_name == "ui.py":
     # sys.path.append("src")
