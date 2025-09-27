@@ -45,3 +45,6 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           docker ps -a
+          docker --version
+          kind --version
+          kubectl version --client --output=yaml
