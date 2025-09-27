@@ -66,7 +66,7 @@ jobs:
             docker --version
             kind --version
             kubectl version --client --output=yaml
-            kubectl apply -f /tmp/kube-deploy/ats-deployment.yaml -n ats-space
+            kubectl apply -f /tmp/kube-deploy/deployment/ats-deployment.yaml -n ats-space
             
 
 #      - name: Set up kubectl
