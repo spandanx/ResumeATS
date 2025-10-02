@@ -40,6 +40,8 @@ jobs:
         run: |
           echo "Current file structure"
           dir
+          echo "Current working directory"
+          pwd
 
       - name: Restore .env file
         run: echo "${{ secrets.ENV_FILE_B64 }}" | base64 --decode > .env
@@ -51,6 +53,8 @@ jobs:
         run: |
           echo "Current file structure"
           dir
+          echo "Current working directory"
+          pwd
 
       - name: Copy file via SSH password
         uses: appleboy/scp-action@v1
