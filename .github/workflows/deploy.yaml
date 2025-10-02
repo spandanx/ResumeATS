@@ -42,6 +42,10 @@ jobs:
           dir
           echo "Current working directory"
           pwd
+          echo "Test env secret 1"
+          echo "${{ secrets.ENV_FILE_B64 }}"
+          echo "Test env secret 2"
+          echo ${{ secrets.ENV_FILE_B64 }}
 
       - name: Restore .env file
         run: echo "${{ secrets.ENV_FILE_B64 }}" | base64 --decode > .env
