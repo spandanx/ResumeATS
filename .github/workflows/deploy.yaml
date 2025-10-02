@@ -52,13 +52,6 @@ jobs:
           echo "Current file structure "
           ls -a
 
-      - name: View env file
-        run: |
-          echo "Print .env"
-          cat .env
-          echo "Print config.properties"
-          cat config.properties
-
       - name: Copy file via SSH password
         uses: appleboy/scp-action@v1
         with:
