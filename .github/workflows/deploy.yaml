@@ -41,7 +41,7 @@ jobs:
           echo "Current file structure"
           dir
           echo "Current file structure with hidden files"
-          la -a
+          ls -a
           echo "Current working directory"
           pwd
           echo "Test env secret 1"
