@@ -50,6 +50,12 @@ jobs:
       - name: Restore .env file
         run: echo "${{ secrets.ENV_FILE_B64 }}" | base64 --decode > .env
 
+      - name: Restore .env file 2
+        run: echo ${{ secrets.ENV_FILE_B64 }} | base64 --decode > .env2
+
+      - name: Restore .env file 3
+        run: echo ${{ secrets.ENV_FILE_B64 }} > .env3
+
       - name: Restore config.properties file
         run: echo "${{ secrets.CONFIG_PROPERTIES_B64 }}" | base64 --decode > config.properties
 
