@@ -41,13 +41,6 @@ jobs:
           echo "Current file structure with hidden files"
           ls -a
 
-      - name: View env files before setting
-        run: |
-          echo "Print .env"
-          cat .env
-          echo "Print config.properties"
-          cat config.properties
-
       - name: Restore .env file
         run: echo ${{ secrets.ENV_FILE_B64 }} | base64 --decode > .env
 
