@@ -38,7 +38,7 @@ jobs:
 
       - name: View file structure BEFORE environment file creation
         run: |
-          echo "Current file structure with hidden files"
+          echo "Current file structure"
           ls -a
 
       - name: Restore .env file
@@ -49,7 +49,7 @@ jobs:
 
       - name: View file structure AFTER environment file creation
         run: |
-          echo "Current file structure with hidden files"
+          echo "Current file structure"
           ls -a
 
       - name: View env file
