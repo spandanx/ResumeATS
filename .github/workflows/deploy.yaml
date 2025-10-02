@@ -73,6 +73,15 @@ jobs:
           echo "Current working directory"
           pwd
 
+      - name: View env file
+        run: |
+          echo "Print .env"
+          cat .env
+          echo "Print .env2"
+          cat .env2
+          echo "Print .env3"
+          cat .env3
+
       - name: Copy file via SSH password
         uses: appleboy/scp-action@v1
         with:
