@@ -27,7 +27,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.13
+          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.14
 
   deploy:
     runs-on: ubuntu-latest
