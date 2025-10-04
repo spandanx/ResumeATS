@@ -43,7 +43,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.17
+          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.18
 
   deploy:
     runs-on: ubuntu-latest
@@ -57,28 +57,38 @@ jobs:
           echo "Current file structure "
           ls -a
 
-      - name: Deploy to cluster
-        uses: steebchen/kubectl@v2.0.0
+      - name: Copy deployment file via SSH password
+        uses: appleboy/scp-action@v1
         with:
-          config: ${{ secrets.KUBECONFIG }}
-          command: apply -f deployment/ats-deployment.yaml
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deployment/ats-deployment.yaml"
+          target: "/tmp/kube-deploy"
+          script: |
+            mkdir -p /tmp/kube-deploy
 
-#          images: 'spandanx/ats_app:1.17'
+      - name: Apply deployment with remote SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            echo "Successfully connected!"
+            echo "SSH file structure"
+            dir
+            docker --version
+            kind --version
+            kubectl version --client --output=yaml
+            kubectl get service -n ats-space
+            kubectl get deployment -n ats-space
+            kubectl get pods -n ats-space
+            kubectl apply -f /tmp/kube-deploy/deployment/ats-deployment.yaml -n ats-space
 
-#      - name: Copy deployment file via SSH password
-#        uses: appleboy/scp-action@v1
-#        with:
-#          host: ${{ secrets.SSH_HOST }}
-#          username: ${{ secrets.SSH_USERNAME }}
-#          password: ${{ secrets.SSH_PASSWORD }}
-#          port: ${{ secrets.SSH_PORT }}
-#          source: "deployment/ats-deployment.yaml"
-#          target: "/tmp/kube-deploy"
-#          script: |
-#            mkdir -p /tmp/kube-deploy
-#
-#
-#      - name: Apply deployment with remote SSH commands
+#      - name: Apply port forwarding with remote SSH commands
 #        uses: appleboy/ssh-action@v1
 #        with:
 #          host: ${{ secrets.SSH_HOST }}
@@ -86,13 +96,4 @@ jobs:
 #          password: ${{ secrets.SSH_PASSWORD }}
 #          port: ${{ secrets.SSH_PORT }}
 #          script: |
-#            echo "Successfully connected!"
-#            echo "SSH file structure"
-#            dir
-#            docker --version
-#            kind --version
-#            kubectl version --client --output=yaml
-#            kubectl get service -n ats-space
-#            kubectl get deployment -n ats-space
-#            kubectl get pods -n ats-space
-#            kubectl apply -f /tmp/kube-deploy/deployment/ats-deployment.yaml -n ats-space
+#            kubectl port-forward service/ats-service-cip 8502:8501 -n ats-space --address=0.0.0.0 &
