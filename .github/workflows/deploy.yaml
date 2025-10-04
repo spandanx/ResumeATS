@@ -57,21 +57,12 @@ jobs:
           echo "Current file structure "
           ls -a
 
-      - name: Set Kubernetes context
-        uses: azure/k8s-set-context@v3
+      - name: Deploy to cluster
+        uses: steebchen/kubectl@v2.0.0
         with:
-          kubeconfig: ${{ secrets.KUBECONFIG }} # Your base64-encoded kubeconfig secret
+          config: ${{ secrets.KUBECONFIG }}
+          command: apply -f deployment/ats-deployment.yaml
 
-      - name: View file structure 2
-        run: |
-          echo "Current file structure "
-          ls -a
-
-      - name: Deploy to Kubernetes
-        uses: azure/k8s-deploy@v5
-        with:
-          manifests: |
-            ./deployment/ats-deployment.yaml
 #          images: 'spandanx/ats_app:1.17'
 
 #      - name: Copy deployment file via SSH password
