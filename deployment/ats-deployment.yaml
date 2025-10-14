@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ats-deployment
+  name: ats-app
   namespace: ats-space
 spec:
   replicas: 1
@@ -15,10 +15,9 @@ spec:
     spec:
       containers:
         - name: ats-container
-          image: spandanx/ats_app:1.19
+          image: spandanx/ats_app:1.20
           ports:
             - containerPort: 8501
               name: ats-http-port
       imagePullSecrets:
         - name: privateimagesecret
-          

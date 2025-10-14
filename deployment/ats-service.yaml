@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ats-service
+  name: ats-service-lb
   namespace: ats-space
 spec:
   selector:
@@ -10,4 +10,5 @@ spec:
     - protocol: TCP
       port: 8501
       targetPort: 8501
-  type: ClusterIP
+      nodePort: 30080
+  type: LoadBalancer

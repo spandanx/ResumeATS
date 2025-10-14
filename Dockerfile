@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 8501
 
 # Command to run the Streamlit application
-CMD ["streamlit", "run", "ui.py"]
+CMD ["streamlit", "run", "ui.py", "--server.sslKeyFile", "certs/key.pem", "--server.sslCertFile", "certs/cert.pem"]
