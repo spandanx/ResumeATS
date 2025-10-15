@@ -26,6 +26,18 @@ jobs:
       - name: Restore config.properties file
         run: echo ${{ secrets.CONFIG_PROPERTIES_B64 }} | base64 --decode > config.properties
 
+      - name: Create certs folder
+        run: |
+          mkdir certs
+          echo "Current file structure after certs folder creation"
+          ls -a
+          
+      - name: Restore cert.pem file
+        run: echo ${{ secrets.CERT_PEM }} | base64 --decode > certs/cert.pem
+
+      - name: Restore key.pem file
+        run: echo ${{ secrets.KEY_PEM }} | base64 --decode > certs/key.pem
+
       - name: View file structure AFTER environment file creation
         run: |
           echo "Current file structure "
@@ -43,7 +55,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.20
+          tags: ${{ secrets.DOCKER_USERNAME }}/ats_app:1.21
 
   deploy:
     runs-on: ubuntu-latest
@@ -88,12 +100,18 @@ jobs:
             kubectl get pods -n ats-space
             kubectl apply -f /tmp/kube-deploy/deployment/ats-deployment.yaml -n ats-space
 
-#      - name: Apply port forwarding with remote SSH commands
-#        uses: appleboy/ssh-action@v1
-#        with:
-#          host: ${{ secrets.SSH_HOST }}
-#          username: ${{ secrets.SSH_USERNAME }}
-#          password: ${{ secrets.SSH_PASSWORD }}
-#          port: ${{ secrets.SSH_PORT }}
-#          script: |
-#            kubectl port-forward service/ats-service-cip 8502:8501 -n ats-space --address=0.0.0.0 &
+      - name: Apply kubectl service with remote SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            echo "Successfully connected!"
+            echo "SSH file structure"
+            dir
+            kubectl get service -n ats-space
+            kubectl get deployment -n ats-space
+            kubectl get pods -n ats-space
+            kubectl apply -f /tmp/kube-deploy/deployment/ats-service.yaml -n ats-space
