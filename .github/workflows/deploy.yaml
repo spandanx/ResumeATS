@@ -40,7 +40,7 @@ jobs:
 #          echo ${{ secrets.CERT_PEM }} | base64 --decode > cert.pem
 
       - name: Restore key.pem file
-        run: echo ${{ secrets.KEY_PEM }} | base64 --decode > certs/key.pem
+        run: echo ${{ secrets.KEY_PEM }} | base64 --decode > key.pem
 
       - name: View file structure AFTER environment file creation
         run: |
