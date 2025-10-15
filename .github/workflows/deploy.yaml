@@ -37,7 +37,7 @@ jobs:
           echo "print cert.pem"
           echo ${{ secrets.CERT_PEM }} | base64 --decode
           echo "Saving cert.pem"
-          echo ${{ secrets.CERT_PEM }} | base64 --decode > certs/cert.pem
+          echo ${{ secrets.CERT_PEM }} | base64 --decode > cert.pem
 
       - name: Restore key.pem file
         run: echo ${{ secrets.KEY_PEM }} | base64 --decode > certs/key.pem
