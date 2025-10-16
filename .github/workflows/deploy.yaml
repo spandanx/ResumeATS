@@ -74,8 +74,6 @@ jobs:
         run: |
           echo "Current file structure "
           ls -a
-          echo "certs file structure "
-          ls certs -a
 
       - name: Copy deployment file via SSH password
         uses: appleboy/scp-action@v1
