@@ -26,11 +26,11 @@ jobs:
       - name: Restore config.properties file
         run: echo ${{ secrets.CONFIG_PROPERTIES_B64 }} | base64 --decode > config.properties
 
-      - name: Create certs folder
-        run: |
-          mkdir certs
-          echo "Current file structure after certs folder creation"
-          ls -a
+#      - name: Create certs folder
+#        run: |
+#          mkdir certs
+#          echo "Current file structure after certs folder creation"
+#          ls -a
           
       - name: Restore cert.pem file
         run: |
