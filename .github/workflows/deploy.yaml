@@ -34,10 +34,10 @@ jobs:
           
       - name: Restore cert.pem file
         run: |
-          echo "print cert.pem"
-          echo ${{ secrets.CERT_PEM }}
           echo "Saving cert.pem"
           echo ${{ secrets.CERT_PEM }} > cert.pem
+          echo "Current file structure "
+          ls -a
 
       - name: Restore key.pem file
         run: echo ${{ secrets.KEY_PEM }} > key.pem
