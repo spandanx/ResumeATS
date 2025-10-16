@@ -35,12 +35,12 @@ jobs:
       - name: Restore cert.pem file
         run: |
           echo "Saving cert.pem"
-          echo ${{ secrets.CERT_PEM }} | base64 --decode > cert.pem
+          echo ${{ secrets.CERT_PEM }} | base64 --decode > certs/cert.pem
           echo "Current file structure "
           ls -a
 
       - name: Restore key.pem file
-        run: echo ${{ secrets.KEY_PEM }} | base64 --decode > key.pem
+        run: echo ${{ secrets.KEY_PEM }} | base64 --decode > certs/key.pem
 
       - name: View file structure AFTER environment file creation
         run: |
