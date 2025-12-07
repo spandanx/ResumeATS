@@ -1,8 +1,11 @@
 import redis
 from datetime import datetime, timedelta
 import json
-from components.memory_cache.MemCache import MemCache
-from components.db_cache.DBCache import DBCache
+from src.components.memory_cache.MemCache import MemCache
+from src.components.db_cache.DBCache import DBCache
+
+# from components.memory_cache.MemCache import MemCache
+# from components.db_cache.DBCache import DBCache
 
 class CacheHandler:
     def __init__(self, redis_url, redis_port, redis_db, redis_password,

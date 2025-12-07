@@ -7,3 +7,9 @@ pyautogen
 autogen-ext[openai]
 python-dotenv
 redis
+passlib
+mysql-connector-python
+bcrypt==4.0.1
+#streamlit-cookies-controller
+#streamlit-local-storage
+#streamlit-ws-localstorage

@@ -14,20 +14,20 @@ import sys
 # # print("source_file_name")
 # # print(source_file_name)
 #
-# if source_file_name == "ui.py":
+# if source_file_name == "pages.py":
 #     sys.path.append("src")
 #     # print("Adding src prefix")
 
 
 
 
-# from src.components.schemas.JobDescriptionSchema import JobDescription
-# from src.components.prompts.system_prompts import job_description_system_prompt
-# from src.components.prompts.user_prompts import job_description_user_prompt
+from src.components.schemas.JobDescriptionSchema import JobDescription
+from src.components.prompts.system_prompts import job_description_system_prompt
+from src.components.prompts.user_prompts import job_description_user_prompt
 
-from components.schemas.JobDescriptionSchema import JobDescription
-from components.prompts.system_prompts import job_description_system_prompt
-from components.prompts.user_prompts import job_description_user_prompt
+# from components.schemas.JobDescriptionSchema import JobDescription
+# from components.prompts.system_prompts import job_description_system_prompt
+# from components.prompts.user_prompts import job_description_user_prompt
 
 from dotenv import load_dotenv
 import os

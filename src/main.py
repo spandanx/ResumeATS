@@ -5,6 +5,10 @@ import os
 import sys
 
 import logging
+
+from config.database.MySQLDB import MysqlDB
+from security.Auth import authenticate_user, create_access_token
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -43,11 +47,11 @@ for item in contents:
     elif os.path.isdir(path):
         logger.info(f"Directory: {item}")
 
-if source_file_name == "ui.py":
+if source_file_name == "pages.py":
     # sys.path.append("src")
     config_file_path = 'config.properties'
-    # print("configuring for ui.py caller")
-    logger.info("configuring for ui.py caller")
+    # print("configuring for pages.py caller")
+    logger.info("configuring for pages.py caller")
     sys.path.append("src")
 elif source_file_name == "main.py":
     config_file_path = '../config.properties'
@@ -57,31 +61,27 @@ else:
     logger.info("configuring for other callers")
 
 
+# from components.agents.JDExtractionAgent import JDExtractionAgent
+# from components.agents.ResumeScoringAgent import ResumeScoringAgent
+# from components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
+# from components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
+# from components.utils.ResumeScoreCalculator import ResumeScoreCalculator
+# from components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
+# from components.utils.HashHandler import HashHandler
+# from components.utils.CacheHandler import CacheHandler
+# from components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
+# from components.DataExtraction.PDFContentReader import PDFContentReader
 
-# from src.components.agents.JDExtractionAgent import JDExtractionAgent
-# from src.components.agents.ResumeScoringAgent import ResumeScoringAgent
-# from src.components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
-# from src.components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
-# from src.components.utils.ResumeScoreCalculator import ResumeScoreCalculator
-# from src.components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
-# from src.components.utils.HashHandler import HashHandler
-# from src.components.utils.CacheHandler import CacheHandler
-#
-# from src.components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
-# from src.components.DataExtraction.PDFContentReader import PDFContentReader
-
-
-from components.agents.JDExtractionAgent import JDExtractionAgent
-from components.agents.ResumeScoringAgent import ResumeScoringAgent
-from components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
-from components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
-from components.utils.ResumeScoreCalculator import ResumeScoreCalculator
-from components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
-from components.utils.HashHandler import HashHandler
-from components.utils.CacheHandler import CacheHandler
-
-from components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
-from components.DataExtraction.PDFContentReader import PDFContentReader
+from src.components.agents.JDExtractionAgent import JDExtractionAgent
+from src.components.agents.ResumeScoringAgent import ResumeScoringAgent
+from src.components.agents.ResumeExtractionAgent import ResumeDataExtractingAgent
+from src.components.agents.SimilarityScoreCalculationAgent import SimilarityScoreCalculationAgent
+from src.components.utils.ResumeScoreCalculator import ResumeScoreCalculator
+from src.components.utils.JDResumeSimilarityScoreCalculator import JDResumeSimilarityScoreCalculator
+from src.components.utils.HashHandler import HashHandler
+from src.components.utils.CacheHandler import CacheHandler
+from src.components.exceptions.CustomExceptions import ResumeExtractionException, ResumeScoringException, JDExtractionException, SimilarityCalculationException
+from src.components.DataExtraction.PDFContentReader import PDFContentReader
 
 
 from datetime import timedelta
@@ -103,6 +103,28 @@ cacheHandler = CacheHandler(redis_url=parser['CACHE']['cache_url'], redis_port=p
                             db_database=parser['MONGODB']['mongodb_database'], db_keyspace=parser['MONGODB']['mongodb_keyspace'])
 expire_time = timedelta(minutes=180)
 # print(parser['CACHE']['url'])
+
+# self.cnx = mysql.connector.connect(
+#     host=props["mysql_hostname"],
+#     port=props["mysql_port"],
+#     user=props["mysql_username"],
+#     password=props["mysql_password"],
+#     database=props["mysql_database"]
+# )
+
+# [MYSQL]
+# mysql_hostname = 103.180.212.180
+# mysql_username = user_stock_21
+# mysql_password = eaSy*__pp
+# mysql_port = 3334
+# mysql_database = ats_db
+
+mysqlDB = MysqlDB(host = parser['MYSQL']['mysql_hostname'],
+                port = parser['MYSQL']['mysql_port'],
+                username = parser['MYSQL']['mysql_username'],
+                password = parser['MYSQL']['mysql_password'],
+                database = parser['MYSQL']['mysql_database'])
+
 
 '''
 Reads PDF content from file
@@ -419,6 +441,19 @@ async def process_resume(resume_file_path, raw_job_description, username):
             scoring_result["components"].append("similarity_description")
     x = 1
     return scoring_result
+
+'''
+Authenticate user
+'''
+async def authenticate(username, password):
+    response = authenticate_user(username, password, mysqlDB)
+    if response:
+        print("main - authenticate()")
+        print(response)
+        data = {"sub": username}
+        token = create_access_token(data, parser['ENCRYPTION']['SECRET_KEY'], parser['ENCRYPTION']['ALGORITHM'], int(parser['ENCRYPTION']['ACCESS_TOKEN_EXPIRE_MINUTES']))
+        return token
+    return response
 
 if __name__ == "__main__":
     resume_data = """
