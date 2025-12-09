@@ -11,6 +11,5 @@ passlib
 mysql-connector-python
 bcrypt==4.0.1
 PyJWT==2.10.1
-#streamlit-cookies-controller
-#streamlit-local-storage
-#streamlit-ws-localstorage
+fastapi-security[oauth2]
+fastapi
