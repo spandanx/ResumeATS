@@ -3,7 +3,7 @@ import mysql.connector
 # from Security.Encryption import AESCipher
 # from config.CommonVariables import RegisterUser, property_var, get_settings
 # from Security.OAuth2Security import RegisterUser
-from config.ExtractProperties import Property
+# from config.ExtractProperties import Property
 import sys, os
 
 # props = property_var.get_property_data()
@@ -106,9 +106,10 @@ class MysqlDB:
 
 
 if __name__ == "__main__":
-    property = Property()
-    props = property.get_property_data()
-    print(props)
+    pass
+    # property = Property()
+    # props = property.get_property_data()
+    # print(props)
     # mysqlDB = MysqlDB()
     # mysqlDB.start_connection()
     # res = mysqlDB.get_user_by_username("admin2")
