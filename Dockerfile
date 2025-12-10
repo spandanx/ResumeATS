@@ -1,8 +1,6 @@
 # Python base image
-FROM python:3.10-slim-buster
-
-# Install networking tools + update cache
-RUN apt-get update && apt-get install -y --no-install-recommends curl iputils-ping netcat dnsutils && apt-get clean && rm -rf /var/lib/apt/lists/*
+# FROM python:3.10-slim-buster
+FROM python:3.10.4-buster
 
 # Set the working directory inside the container
 WORKDIR /resume-ats-app
