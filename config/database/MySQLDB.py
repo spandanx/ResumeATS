@@ -18,15 +18,16 @@ logger = logging.getLogger(__name__)
 class MysqlDB:
 
     def __init__(self, host, port, username, password, database):
-        self.cnx = mysql.connector.connect(
-            host=host,
-            port=port,
-            user=username,
-            password=password,
-            database=database
-        )
-
-        self.cur = self.cnx.cursor()
+        pass
+        # self.cnx = mysql.connector.connect(
+        #     host=host,
+        #     port=port,
+        #     user=username,
+        #     password=password,
+        #     database=database
+        # )
+        #
+        # self.cur = self.cnx.cursor()
 
     def reestablish_connection(self):
         print("Called MysqlDB.start_connection()")
@@ -41,20 +42,28 @@ class MysqlDB:
             result.append(row_dict)
         return result
 
+    # def get_user_by_username(self, username):
+    #     print("Calling MysqlDB.get_user_by_username()")
+    #     if self.cnx.is_connected():
+    #         print("MySQL Connection is active")
+    #     else:
+    #         # self.start_connection()
+    #         self.reestablish_connection()
+    #         print("MySQL Connection is not active")
+    #     self.cur.execute("SELECT * FROM ats_user where username = %s", (username, ))
+    #     desc = self.cur.description
+    #     columns = [col[0] for col in desc]
+    #     row = self.cur.fetchall()
+    #     print(row)
+    #     result = self.enrich_user_result(columns=columns, result_array=row)
+    #     print("RESULT")
+    #     print(result)
+    #     return result
+
     def get_user_by_username(self, username):
-        print("Calling MysqlDB.get_user_by_username()")
-        if self.cnx.is_connected():
-            print("MySQL Connection is active")
-        else:
-            # self.start_connection()
-            self.reestablish_connection()
-            print("MySQL Connection is not active")
-        self.cur.execute("SELECT * FROM ats_user where username = %s", (username, ))
-        desc = self.cur.description
-        columns = [col[0] for col in desc]
-        row = self.cur.fetchall()
-        print(row)
-        result = self.enrich_user_result(columns=columns, result_array=row)
+        #Fake
+        print("Calling MysqlDB.get_user_by_username() Fake")
+        result = [{'username': 'user111', 'full_name': 'Primary User 1', 'email': 'user@test.com', 'hashed_password': '$2b$12$gufTThOeFrnZCrxpCU4Rv.W1wttkdpXJHrDH1LVwsv7tLabzEKcFu', 'disabled': 0}]
         print("RESULT")
         print(result)
         return result
