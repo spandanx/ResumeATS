@@ -168,24 +168,27 @@ async def extract_job_description(job_description, username, expiry):
 Extracts the resume data
 '''
 async def extract_resume_description(raw_resume_data, username, expiry):
+    logging.info("Called extract_resume_description()")
     resume_extractor = ResumeDataExtractingAgent()
     resume_data_raw_input = {
         "resume_content": raw_resume_data
     }
     try:
         content_hash = hashHandler.generate_hash(raw_resume_data.encode('utf-8'))
-        print("content_hash", content_hash)
+        logging.info("content_hash")
+        logging.info(content_hash)
 
         cache_key = "extract_resume_description:" + username + ":" + content_hash
         cached_resume_json = cacheHandler.get_from_cache(cache_key, username, expiry)
         if cached_resume_json:
-            print("Found cached extracted resume")
+            logging.info("Found cached extracted resume")
             return cached_resume_json
         else:
+            logging.info("Could not find cached extracted resume")
             extracted_resume_data = await resume_extractor.extract_resume(resume_data_raw_input)
             resume_json = json.loads(extracted_resume_data.messages[-1].content)
             cache_response = cacheHandler.cache_data(data=resume_json, key=cache_key, expiry=expire_time, username=username)
-            print("Cached extracted resume for id", cache_key, cache_response)
+            logging.info("Cached extracted resume for id", cache_key, cache_response)
         # resume_json = {'achievements': [], 'candidate_information': {'contact_number': '+91-xxxxxxxx',
         #                                                              'email_id': 'prashantxxxxx@gmail.com',
         #                                                              'github_profile_link': 'GitHub Profile',
@@ -425,8 +428,16 @@ async def process_resume(resume_file_path, raw_job_description, username):
     scoring_result["components"] = []
     if resume_file_path:
         resume_content = await read_pdf(resume_file_path)
+        logging.info("resume_content")
+        logging.info(resume_content)
         extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content, username=username, expiry=expire_time)
+        logging.info("extracted_resume_json")
+        logging.info(extracted_resume_json)
         resume_total_score, resume_component_wise_score, resume_score_description = await calculate_resume_score(resume_json = extracted_resume_json, username=username)
+        logging.info("resume_total_score, resume_component_wise_score, resume_score_description")
+        logging.info(resume_total_score)
+        logging.info(resume_component_wise_score)
+        logging.info(resume_score_description)
 
         scoring_result["resume_total_score"] = resume_total_score
         scoring_result["resume_component_wise_score"] = resume_component_wise_score
@@ -435,6 +446,10 @@ async def process_resume(resume_file_path, raw_job_description, username):
         if raw_job_description:
             extracted_jd = await extract_job_description(job_description=raw_job_description, username=username, expiry=expire_time)
             similarity_total_score, component_wise_score_similarity, similarity_score_description = await jd_resume_similarity_score_calculator(resume_json=extracted_resume_json, jd_json=extracted_jd, username=username)
+            logging.info("similarity_total_score, component_wise_score_similarity, similarity_score_description")
+            logging.info(similarity_total_score)
+            logging.info(component_wise_score_similarity)
+            logging.info(similarity_score_description)
 
             scoring_result["similarity_total_score"] = similarity_total_score
             scoring_result["component_wise_score_similarity"] = component_wise_score_similarity
