@@ -1,3 +1,5 @@
+import logging
+
 import redis
 from datetime import datetime, timedelta
 import json
@@ -10,6 +12,10 @@ from src.components.db_cache.DBCache import DBCache
 class CacheHandler:
     def __init__(self, redis_url, redis_port, redis_db, redis_password,
                  db_username, db_password, db_hostname, db_database, db_keyspace, db_port):
+        logging.info("redis_url, redis_port, redis_db")
+        logging.info(redis_url)
+        logging.info(redis_port)
+        logging.info(redis_db)
         self.mem_cache = MemCache(redis_url=redis_url, redis_port=redis_port, redis_db=redis_db, redis_password=redis_password)
         self.db_cache = DBCache(username=db_username, password=db_password, hostname=db_hostname,
                                 database=db_database, keyspace=db_keyspace, port=db_port)
@@ -25,7 +31,15 @@ class CacheHandler:
         return response
 
     def get_from_cache(self, key, username, expiry):
+        logging.info("Called get_from_cache()")
+        logging.info("key, username, expiry")
+        logging.info(key)
+        logging.info(username)
+        logging.info(expiry)
+
         cached_data = self.mem_cache.get_from_cache(key)
+        logging.info("cached_data")
+        logging.info(cached_data)
         if cached_data is None:
             db_response = self.db_cache.get_record(key)
             if db_response is not None:

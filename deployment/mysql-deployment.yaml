@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-app
+  namespace: ats-space
+spec:
+  selector:
+    matchLabels:
+      app: mysql-app
+  strategy:
+    type: Recreate # Ensures data integrity by recreating pods safely
+  template:
+    metadata:
+      labels:
+        app: mysql-app
+    spec:
+      containers:
+      - name: mysql-app
+        image: mysql:8.0 # Using MySQL 8.0 image
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret # Reference the Secret name
+              key: MYSQL_ROOT_PASSWORD # Reference the key within the Secret
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql # Path where MySQL stores its data
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim # Reference the PVC name
