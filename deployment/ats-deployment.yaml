@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ats-container
-          image: spandanx/ats_app:1.34
+          image: spandanx/ats_app:1.33
           ports:
             - containerPort: 8501
               name: ats-http-port
