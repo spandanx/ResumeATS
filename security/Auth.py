@@ -13,23 +13,9 @@ from passlib.context import CryptContext
 # from config.database.MySQLDB import MysqlDB
 
 
-# fake_users_db = {
-#     "admin": {
-#         "username": "admin",
-#         "full_name": "Admin User",
-#         "email": "admin@admin.com",
-#         "hashed_password": "$2b$12$G6Qw5e.K871doase2mJqgepPaB7frMIWb973E9zspNl3dNrHSik8C",#"$2b$12$cEgVZpjKEu79bo97d.h1muyLfV2U/JqNdslg/T/0cEJwcBvdbyKem",
-#         "disabled": False,
-#     }
-# }
-
-
 # SECRET_KEY = get_settings().SECRET_KEY
 # ALGORITHM = get_settings().ALGORITHM
 # ACCESS_TOKEN_EXPIRE_MINUTES = int(get_settings().ACCESS_TOKEN_EXPIRE_MINUTES)
-
-
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -175,7 +161,7 @@ def create_access_token(data: dict, SECRET_KEY: str, ALGORITHM: str, expires_del
 
 if __name__ == "__main__":
     # pass
-    # passw = "pass1"
+    # passw = "pass"
     # encyrpted = get_password_hash(passw)
     # print(encyrpted)
     # response = verify_password(passw, encyrpted)

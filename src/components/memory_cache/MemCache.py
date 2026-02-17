@@ -33,13 +33,13 @@ class MemCache:
 
 
 if __name__ == "__main__":
-    cache_url = "103.180.212.180"
-    cache_port = 6379
+    cache_url = "host"
+    cache_port = 0
     # expiry_minutes = 2
-    expiry_seconds = 90
-    user_id = 112
+    expiry_seconds = 10
+    user_id = 1
     cache_db = 0
-    cache_password = "tthPa9Re"
+    cache_password = "ABC"
 
     redis_url = f"redis://default:{cache_password}@{cache_url}:6379/0"
     logging.info(redis_url)

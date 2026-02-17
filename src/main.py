@@ -112,19 +112,11 @@ expire_time = timedelta(minutes=180)
 #     database=props["mysql_database"]
 # )
 
-# [MYSQL]
-# mysql_hostname = 103.180.212.180
-# mysql_username = user_stock_21
-# mysql_password = eaSy*__pp
-# mysql_port = 3334
-# mysql_database = ats_db
-
 mysqlDB = MysqlDB(host = parser['MYSQL']['mysql_hostname'],
                 port = parser['MYSQL']['mysql_port'],
                 username = parser['MYSQL']['mysql_username'],
                 password = parser['MYSQL']['mysql_password'],
                 database = parser['MYSQL']['mysql_database'])
-
 
 '''
 Reads PDF content from file
@@ -175,8 +167,8 @@ async def extract_resume_description(raw_resume_data, username, expiry):
     }
     try:
         content_hash = hashHandler.generate_hash(raw_resume_data.encode('utf-8'))
-        logging.info("content_hash")
-        logging.info(content_hash)
+        # logging.info("content_hash")
+        # logging.info(content_hash)
 
         cache_key = "extract_resume_description:" + username + ":" + content_hash
         cached_resume_json = cacheHandler.get_from_cache(cache_key, username, expiry)
@@ -189,49 +181,6 @@ async def extract_resume_description(raw_resume_data, username, expiry):
             resume_json = json.loads(extracted_resume_data.messages[-1].content)
             cache_response = cacheHandler.cache_data(data=resume_json, key=cache_key, expiry=expire_time, username=username)
             logging.info("Cached extracted resume for id", cache_key, cache_response)
-        # resume_json = {'achievements': [], 'candidate_information': {'contact_number': '+91-xxxxxxxx',
-        #                                                              'email_id': 'prashantxxxxx@gmail.com',
-        #                                                              'github_profile_link': 'GitHub Profile',
-        #                                                              'linkedin_profile_link': 'LinkedIn Profile',
-        #                                                              'name': 'Prashant Singh',
-        #                                                              'other_information': 'Roll No.: xxxxxxx'},
-        #                'certifications': [], 'company_projects': [], 'education': [
-        #         {'duration': '2020-24', 'institution_name': 'Shri Ramdeobaba College of Engineering and Management',
-        #          'location': 'Nagpur', 'marks': 'CGPA: xx',
-        #          'other_information': 'Bachelor of Technology in Computer Science and Engineering(Cyber Security)'}],
-        #                'experience': [{'company_name': 'AICTE-Eduskills', 'contributions': [
-        #                    'In-depth understanding of AWS cloud computing services, including EC2, S3, RDS, Lambda, IAM, VPC, and more.',
-        #                    'Proficient in designing, deploying, and managing fault-tolerant, highly available, and scalable AWS solutions.',
-        #                    'Strong knowledge of architectural best practices, such as AWS Well-Architected Framework, security, performance, and cost optimization.',
-        #                    'Hands-on experience in cloud infrastructure provisioning, monitoring, and automation using AWS Management Console and AWS CLI.'],
-        #                                'designation': 'AWS Cloud Virtual Internship', 'duration': 'May - July 2023',
-        #                                'technology': []}, {'company_name': 'AICTE-Eduskills', 'contributions': [
-        #                    'Learned the fundamentals of Security Operations Center (SOC).',
-        #                    'Learned basics of Network & Cloud Security.'],
-        #                                                    'designation': 'Palo Alto Cybersecurity Virtual Internship',
-        #                                                    'duration': 'Dec 2022 - Feb 2023', 'technology': []}],
-        #                'personal_projects': [{'complete_description': [
-        #                    'Facilitating users’ logins to websites without having to remember their credentials',
-        #                    'Used Live detection techniques to create high order security.'], 'duration': 'NOT FOUND',
-        #                                       'project_description': 'A website based facial authentication system, implemented using a Chrome Extension.',
-        #                                       'project_name': 'Web Based Facial Authentication(Liveness Detection)',
-        #                                       'technology': ['Python', 'Reactjs', 'Bootstrap']}, {
-        #                                          'complete_description': [
-        #                                              'Used Firebase Authentication(SDK) to facilitate authentication & Cloud Firestore to store data.'],
-        #                                          'duration': 'NOT FOUND',
-        #                                          'project_description': 'A react based web application which allow users to chat in real time.',
-        #                                          'project_name': 'Realtime Chat App',
-        #                                          'technology': ['Reactjs', 'Firebase', 'Bootstrap', 'HTML']}, {
-        #                                          'complete_description': [
-        #                                              'Tracking world-wide cases using google maps and live API stats and datasets.'],
-        #                                          'duration': 'NOT FOUND',
-        #                                          'project_description': 'Daily and weekly updated statistics tracking the number of COVID-19 cases, recovered, and deaths.',
-        #                                          'project_name': 'Covid-19 Tracker',
-        #                                          'technology': ['JavaScript', 'CSS', 'HTML', 'API']}],
-        #                'skills': ['C/C++', 'Python', 'Javascript', 'HTML+CSS', 'C++ STL', 'Python Libraries', 'ReactJs',
-        #                           'Nodejs', 'VScode', 'Git', 'Github', 'MongoDb', 'Firebase',
-        #                           'Relational Database(mySql)', 'Data Structures & Algorithms', 'Operating Systems',
-        #                           'Object Oriented Programming', 'Database Management System', 'Software Engineering']}
             return resume_json
     except Exception as e:
         raise ResumeExtractionException()
@@ -304,7 +253,6 @@ async def calculate_resume_score(resume_json, username):
             # Join with cached sections
             for key, val in cached_resume_score_json.items():
                 resume_score_description["scoring_sections"].append(val)
-            # resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
 
             cache_response = cacheHandler.cache_data(data=resume_score_description, key=complete_json_level_cache_key,
                                                      expiry=expire_time, username=username)
@@ -399,7 +347,6 @@ async def jd_resume_similarity_score_calculator(jd_json, resume_json, username):
             # Join with cached sections
             for key, val in cached_jd_score_json.items():
                 similarity_score_description["scoring_sections"].append(val)
-            # resume_score_description = {"scoring_sections":[{"category":"candidate_information","score":7.5,"justification":"The candidate information includes essential details such as name, contact number, email, and links to GitHub and LinkedIn. However, placeholder texts (e.g., 'xxxxxxxx' for contact number and 'GitHub Profile') reduce clarity and completeness.","improvement_suggestions":["Use actual contact details instead of placeholders.","Provide direct links to GitHub and LinkedIn profiles for easy access."]},{"category":"education","score":6.0,"justification":"The education section provides institutional details and degree info but lacks specifics such as the exact graduation date and CGPA values, which lowers its quality.","improvement_suggestions":["Replace 'xx' in CGPA with actual score.","Add the month and year of graduation for clarity."]},{"category":"experience","score":8.0,"justification":"Experience is well-detailed with roles, duration, and contributions outlined. However, both experiences are from the same company, leading to a possible perception of limited workplace exposure.","improvement_suggestions":["Include more diversity in companies or roles to show broader experience.","Highlight specific achievements or outcomes from these roles."]},{"category":"skills","score":9.0,"justification":"The skills section is comprehensive and covers a wide range of technical abilities. There are no major grammatical issues, but the formatting can be improved for readability.","improvement_suggestions":["Consider categorizing skills by proficiency or relevance (e.g., Programming Languages, Frameworks, Tools) for better organization."]},{"category":"personal_projects","score":7.0,"justification":"Personal projects are diverse and showcase the candidate's initiative. However, the 'duration' field is noted as 'NOT FOUND,' which diminishes clarity regarding commitment and completion.","improvement_suggestions":["Provide actual time frames for each project.","Include links to live projects or GitHub repositories for users to verify applications."]},{"category":"certifications","score":0.0,"justification":"There are no certifications listed in the resume, resulting in a complete absence of relevant credentials.","improvement_suggestions":["Obtain and include relevant certifications to enhance technical credibility."]},{"category":"achievements","score":0.0,"justification":"No achievements are mentioned, which is a significant missed opportunity as achievements can help demonstrate the candidate's impact and successes.","improvement_suggestions":["Add relevant achievements such as awards, recognitions, or milestones attained in academic or project environments."]},{"category":"company_projects","score":0.0,"justification":"There are no company projects listed. Company projects can provide insight into collaboration, responsibility, and professional experiences.","improvement_suggestions":["Include any significant company projects that demonstrate the ability to work in a team or lead tasks in a professional setting."]}]}
 
             cache_response = cacheHandler.cache_data(data=similarity_score_description,
                                                      key=complete_jd_json_level_cache_key,
@@ -428,16 +375,16 @@ async def process_resume(resume_file_path, raw_job_description, username):
     scoring_result["components"] = []
     if resume_file_path:
         resume_content = await read_pdf(resume_file_path)
-        logging.info("resume_content")
-        logging.info(resume_content)
+        # logging.info("resume_content")
+        # logging.info(resume_content)
         extracted_resume_json = await extract_resume_description(raw_resume_data=resume_content, username=username, expiry=expire_time)
-        logging.info("extracted_resume_json")
-        logging.info(extracted_resume_json)
+        # logging.info("extracted_resume_json")
+        # logging.info(extracted_resume_json)
         resume_total_score, resume_component_wise_score, resume_score_description = await calculate_resume_score(resume_json = extracted_resume_json, username=username)
-        logging.info("resume_total_score, resume_component_wise_score, resume_score_description")
-        logging.info(resume_total_score)
-        logging.info(resume_component_wise_score)
-        logging.info(resume_score_description)
+        # logging.info("resume_total_score, resume_component_wise_score, resume_score_description")
+        # logging.info(resume_total_score)
+        # logging.info(resume_component_wise_score)
+        # logging.info(resume_score_description)
 
         scoring_result["resume_total_score"] = resume_total_score
         scoring_result["resume_component_wise_score"] = resume_component_wise_score
@@ -472,113 +419,11 @@ async def authenticate(username, password):
 
 if __name__ == "__main__":
     resume_data = """
-    Prashant Singh
-    Roll No.: xxxxxxx
-    Bachelor of Technology
-    Shri Ramdeobaba College of Engineering and Management, Nagpur
-
-    (cid:131) +91-xxxxxxxx
-    # prashantxxxxx@gmail.com
-    § GitHub Profile
-    (cid:239) LinkedIn Profile
-
-    Education
-
-    •Bachelor of Technology in Computer Science and Engineering(Cyber Security)
-    Shri Ramdeobaba College of Engineering and Management, Nagpur
-
-    2020-24
-
-    CGPA: xx
-
-    Personal Projects
-
-    •Web Based Facial Authentication(Liveness Detection)
-    A website based facial authentication system, implemented using a Chrome Extension.
-
-    – Facilitating users’ logins to websites without having to remember their credentials
-    – Used Live detection techniques to create high order security.
-    – Technology Used: Python, Reactjs, Bootstrap.
-
-    •Realtime Chat App
-    A react based web application which allow users to chat in real time.
-
-    – Used Firebase Authentication(SDK) to facilitate authentication & Cloud Firestore to store data.
-    – Technology Used: Reactjs, Firebase, Bootstrap, HTML.
-
-    •Covid-19 Tracker
-    Daily and weekly updated statistics tracking the number of COVID-19 cases, recovered, and deaths.
-
-    – Tracking world-wide cases using google maps and live API stats and datasets.
-    – Technology Used : JavaScript , CSS, HTML, API.
-
-    Experience
-
-    •AWS Cloud Virtual Internship
-    Online
-    AICTE-Eduskills
-    – In-depth understanding of AWS cloud computing services, including EC2, S3, RDS, Lambda, IAM, VPC, and
-
-    May - July 2023
-
-    more.
-
-    – Proficient in designing, deploying, and managing fault-tolerant, highly available, and scalable AWS solutions.
-    – Strong knowledge of architectural best practices, such as AWS Well-Architected Framework, security, performance,
-
-    and cost optimization.
-
-    – Hands-on experience in cloud infrastructure provisioning, monitoring, and automation using AWS Management
-
-    Console and AWS CLI.
-
-    •Palo Alto Cybersecurity Virtual Internship
-    AICTE-Eduskills
-    – Learned the fundamentals of Security Operations Center (SOC).
-    – Learned basics of Network & Cloud Security.
-
-    Technical Skills and Interests
-
-    Dec 2022 - Feb 2023
-
-    Online
-
-    Languages: C/C++, Python, Javascript, HTML+CSS
-    Libraries : C++ STL, Python Libraries, ReactJs
-    Web Dev Tools: Nodejs, VScode, Git, Github
-    Frameworks: ReactJs
-    Cloud/Databases:MongoDb, Firebase, Relational Database(mySql)
-    Relevent Coursework: Data Structures & Algorithms, Operating Systems, Object Oriented Programming, Database
-    Management System, Software Engineering.
-    Areas of Interest: Web Design and Development, Cloud Security.
-    Soft Skills: Problem Solving, Self-learning, Presentation, Adaptability
-
-    Positions of Responsibility
-
-    •On Desk Registrations Volunteer Aarhant Cyber Week Event - RCOEM, Nagpur
-
-    Oct - Dec 2022
-
-    – Helped to attract close to 300 attendees to the event.
-    – Collected over Rs. 20,000 in entry fees for different activities.
+    
 
     """
     job_description = """
     Responsibilities
-    Develop, test, and maintain web applications using Java and Spring Boot.
-    Collaborate with cross-functional teams to define and implement new features.
-    Ensure the performance, quality, and responsiveness of applications.
-    Identify and correct bottlenecks and fix bugs.
-    Document development processes, coding standards, and project requirements.
-    Participate in code reviews to ensure adherence to best practices and coding standards.
-    Stay up-to-date with emerging technologies and industry trends.
-    Qualifications
-    Bachelor's degree in Computer Science, Information Technology, or related field.
-    Proven experience as a Java Developer, with expertise in Spring Boot.
-    Strong understanding of object-oriented programming principles and design patterns.
-    Experience with databases such as MySQL, PostgreSQL, or MongoDB.
-    Knowledge of front-end technologies like HTML, CSS, and JavaScript is a plus.
-    Excellent problem-solving skills and attention to detail.
     Good communication and teamwork abilities.
     Skills
     Java
@@ -590,7 +435,7 @@ if __name__ == "__main__":
     Maven
     Unit Testing
     """
-    file_path = "C:\\Users\\Spandan\\Downloads\\70__ATS_rating_Resume_Template_test.pdf"
+    file_path = "path.pdf"
     username = "user123"
     response = asyncio.run(process_resume(resume_file_path=file_path, raw_job_description=job_description, username=username))
     print(response)

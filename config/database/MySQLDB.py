@@ -64,7 +64,6 @@ class MysqlDB:
     # def get_user_by_username(self, username):
     #     #Fake
     #     print("Calling MysqlDB.get_user_by_username() Fake")
-    #     result = [{'username': 'user111', 'full_name': 'Primary User 1', 'email': 'user@test.com', 'hashed_password': '$2b$12$gufTThOeFrnZCrxpCU4Rv.W1wttkdpXJHrDH1LVwsv7tLabzEKcFu', 'disabled': 0}]
     #     print("RESULT")
     #     print(result)
     #     return result
@@ -89,7 +88,7 @@ class MysqlDB:
         else:
             self.reestablish_connection()
             print("MySQL Connection is not active")
-        # sql_insert_query = "UPDATE stockdoc_user SET stock_token = 'abc', stock_token_update_date = '2023-12-31 14:30:00' WHERE username = 'adm_90'"
+        # sql_insert_query = "UPDATE stockdoc_user SET stock_token = 'abc', stock_token_update_date = '2023-12-31 14:30:00' WHERE username = 'user'"
         sql_insert_query = "UPDATE ats_user SET stock_token = %s, stock_token_update_date = %s WHERE username = %s"
         self.cur.execute(sql_insert_query, (token, updated_on, username))
         self.cnx.commit()
@@ -117,16 +116,4 @@ class MysqlDB:
 
 if __name__ == "__main__":
     pass
-    # property = Property()
-    # props = property.get_property_data()
-    # print(props)
-    # mysqlDB = MysqlDB()
-    # mysqlDB.start_connection()
-    # res = mysqlDB.get_user_by_username("admin2")
-    # print(res)
-    # mysqlDB.close_connection()
-    # desc = [('username', 253, None, None, None, None, 0, 20483, 255), ('full_name', 253, None, None, None, None, 1, 0, 255), ('email', 253, None, None, None, None, 1, 0, 255), ('hashed_password', 252, None, None, None, None, 1, 16, 255), ('disabled', 1, None, None, None, None, 1, 32768, 63)]
-    # columns = [col[0] for col in desc]
-    # row = [['admin', 'Admin User', 'admin@admin.com', '$2b$12$G6Qw5e.K871doase2mJqgepPaB7frMIWb973E9zspNl3dNrHSik8C', 0]]
-    # print(mysqlDB.enrich_result(columns=columns, result_array=row))
 

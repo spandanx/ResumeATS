@@ -5,14 +5,11 @@ class DBCache:
         self.database = self.get_database(username, password, hostname, database, keyspace, port)
 
     def get_database(self, username, password, hostname, database, keyspace, port):
-        # Provide the mongodb atlas url to connect python to mongodb using pymongo
-        # CONNECTION_STRING = "mongodb+srv://user:pass@cluster.mongodb.net/myFirstDatabase"
+
         CONNECTION_STRING = f"mongodb://{username}:{password}@{hostname}:{port}"
 
-        # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
         client = MongoClient(CONNECTION_STRING)
 
-        # Create the database for our example (we will use the same database throughout the tutorial
         return client[database][keyspace]
 
     def get_record(self, key):
@@ -26,23 +23,22 @@ class DBCache:
 
 
 if __name__ == "__main__":
-    username = "admin5443"
-    password = "p0_L766Poi"
-    hostname = "103.180.212.180"
-    port = "27017"
+    username = "ABC"
+    password = "ABC"
+    hostname = "host"
+    port = "100"
     database = "ats_db"
     keyspace = "ats_cache"
     dbCache = DBCache(username, password, hostname, database, keyspace, port)
     # keySpace = dbCache.database["ats_cache"]
-    key = "68b90a9f056bc19e78f6e8d7"
-    # key = "68b90a9f056bc19e78f6e877uui"
+    key = "ABC"
     # response = keySpace.find({"key": id})
     # response = keySpace.find_one()
     # response = dbCache.database.find_one({"key": key})
     # response = dbCache.get_record(key=key)
     # print(response)
     data = {
-        "key": "21b80a8f056bd19e78f6e8e5",
+        "key": "ABC",
         "item_name": "Apple",
         "quantity": 3,
         "ingredients": "Fruit"

@@ -87,9 +87,10 @@ def login_page():
                 if response is not None and response is not False:
                     logging.info("Logging In")
                     st.session_state.logged_in = True
+                    st.session_state.username = username
                     login_placeholder.empty()  # Clear the login form
                     # st.success("Login successful!")
-                    logging.info("Setting cache")
+                    # logging.info("Setting cache")
                     # all_cache = controller.getAll()
                     # logging.info(all_cache)
                     # controller.set('username', username)
@@ -118,6 +119,7 @@ with logout_tab:
     if ('logged_in' in st.session_state) and st.session_state.logged_in:
         if st.button("Logout", key="logout_button_small"):
             st.session_state.logged_in = False
+            st.session_state.username = ""
             # st.experimental_rerun() # Rerun to show login page again
             st.rerun()
 
@@ -146,6 +148,28 @@ if ('logged_in' not in st.session_state) or (('logged_in' in st.session_state) a
 #         st.session_state.logged_in = False
 #         st.rerun()
 
+def switch_tab(tab_index):
+    js = f"""
+    <script>
+    function clickTab() {{
+        var tabGroup = window.parent.document.getElementsByClassName("stTabs")[0];
+        if (tabGroup) {{
+            var tabs = tabGroup.getElementsByTagName("button");
+            if (tabs.length > {tab_index}) {{
+                tabs[{tab_index}].click();
+                return true;
+            }}
+        }}
+        return false;
+    }}
+    // Try immediately and with a small delay
+    if (!clickTab()) {{
+        setTimeout(clickTab, 100);
+    }}
+    </script>
+    """
+    st.components.v1.html(js, height=0)
+
 # with full_page:
 if ('logged_in' in st.session_state) and st.session_state.logged_in:
 
@@ -153,7 +177,12 @@ if ('logged_in' in st.session_state) and st.session_state.logged_in:
 
     response = {}
 
-    username = "user123"
+    username = "default_user"
+    if 'username' in st.session_state:
+        username = st.session_state['username']
+
+    logging.info("Current user - ")
+    logging.info(username)
 
     with input_tab:
 
@@ -168,6 +197,7 @@ if ('logged_in' in st.session_state) and st.session_state.logged_in:
                 try:
                     response = asyncio.run(process_resume(resume_file_path=uploaded_resume_file, raw_job_description=job_description, username=username))
                     # st.markdown(response)
+                    switch_tab(1)
                 except Exception as e:
                     st.markdown(f":red[Something is wrong! Could not perform the analysis] \n {e}")
 
