@@ -180,7 +180,7 @@ async def extract_resume_description(raw_resume_data, username, expiry):
             extracted_resume_data = await resume_extractor.extract_resume(resume_data_raw_input)
             resume_json = json.loads(extracted_resume_data.messages[-1].content)
             cache_response = cacheHandler.cache_data(data=resume_json, key=cache_key, expiry=expire_time, username=username)
-            logging.info("Cached extracted resume for id", cache_key, cache_response)
+            logging.info("Cached extracted resume for id" + cache_key)
             return resume_json
     except Exception as e:
         raise ResumeExtractionException()

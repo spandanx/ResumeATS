@@ -197,6 +197,8 @@ if ('logged_in' in st.session_state) and st.session_state.logged_in:
                 try:
                     response = asyncio.run(process_resume(resume_file_path=uploaded_resume_file, raw_job_description=job_description, username=username))
                     # st.markdown(response)
+                    logging.info("response")
+                    logging.info(response)
                     switch_tab(1)
                 except Exception as e:
                     st.markdown(f":red[Something is wrong! Could not perform the analysis] \n {e}")
@@ -311,16 +313,90 @@ if ('logged_in' in st.session_state) and st.session_state.logged_in:
 
                     st.divider()
                 ################ Suggestions ##############
+        if "components" in response and len(response["components"]) == 1:
+            # resume_tab, similaity_tab = st.tabs(["Resume Score", "Similarity Score"])
+            resume_tab = st.tabs(["Resume Score"])
+
+            with resume_tab[0]:
+                # st.write(response["resume_score_description"])
+                # resume_dict = response["resume_component_wise_score"]
+
+                ############### Donut chart ###############
+
+                # labels = [label["category"] for label in response["resume_component_wise_score"]]
+                labels = ["Resume score", "Scope of improvements"]
+                # labels.append("scope of improvements")
+                # labels = ['resume score', 'scope of improvements']
+
+                # values = [label["score"] for label in response["resume_component_wise_score"]]
+                values = [response["resume_total_score"], 100 - response["resume_total_score"]]
+                # values.append(100 - response["resume_total_score"])
+                # values = [response["resume_total_score"], 100 - response["resume_total_score"]]
+                colors = ['rgb(43, 171, 103)', 'rgb(138, 150, 144)']
+
+                # colors = [generate_random_color() for _ in range(2)]
+
+                # Use `hole` to create a donut-like pie chart
+                # fig = go.Figure(data=[go.Pie(labels=labels, values=values, marker_colors=colors)])
+                resume_donut_chart_column, resume_line_chart_column = st.columns([1, 1])
+
+                with resume_donut_chart_column:
+                    ############### Donut chart ###############
+                    fig = go.Figure(data=[go.Pie(labels=labels, values=values, marker_colors=colors)])
+                    fig.update_traces(hoverinfo='label+percent', textinfo='none', hole=.8)
+                    fig.update_layout(
+                        annotations=[dict(text=(str(round(response["resume_total_score"], 2))), x=0.5, y=0.5,
+                                          font_size=20, showarrow=False, xanchor="center"),
+                                     dict(text="TOTAL", x=0.5, y=0.4,
+                                          font_size=20, showarrow=False, xanchor="center")
+                                     ])
+                    st.plotly_chart(fig)
+                    ############### Donut chart ###############
+
+                with resume_line_chart_column:
+
+                    ############### Line chart ################
+                    df = pd.DataFrame(
+                        {
+                            "Sections": [section["category"] for section in response["resume_component_wise_score"]],
+                            "Scores": [section["score"] for section in
+                                       response["resume_component_wise_score"]],
+                            "Colors": [generate_random_color() for _ in range(len(response["resume_component_wise_score"]))]
+                        }
+                    )
+
+                    # st.bar_chart(df, x="Features", y="Scores")
+                    st.bar_chart(df, x="Sections", y="Scores", color="Colors")
+
+                    ############### Line chart ################
+
+                ############## Columns ##############
+                st.divider()
+                for resume_section in response["resume_component_wise_score"]:
+                    line_col, description_col = st.columns([0.2, 0.8])
+
+                    with line_col:
+                        st.progress(int(resume_section["score"]) * 10, text=resume_section["category"] + " | Score - :red[" + str(int(resume_section["score"])) + "]")
+                        # st.markdown("")
+
+                    with description_col:
+                        st.markdown(resume_section["justification"])
+
+                        with st.expander("Suggestions"):
+                            st.write('\n'.join([" - " + suggestion for suggestion in resume_section["improvement_suggestions"]]))
+
+                    st.divider()
 
         elif "components" in response and len(response["components"]) == 0:
             st.markdown(":red[Could not analyse the resume]")
 
-        elif "components" in response and "resume_description" in response["components"]:
-            st.header("Resume Score")
-            st.write(response["resume_score_description"])
-
-        elif "components" in response and "similarity_description" in response["components"]:
-            st.header("Similarity Score")
-            st.write(response["similarity_score_description"])
+        # elif "components" in response and "resume_description" in response["components"]:
+        # # elif "components" in response and "resume_score_description" in response["components"]:
+        #     st.header("Resume Score")
+        #     st.write(response["resume_score_description"])
+        #
+        # elif "components" in response and "similarity_description" in response["components"]:
+        #     st.header("Similarity Score")
+        #     st.write(response["similarity_score_description"])
 
 
