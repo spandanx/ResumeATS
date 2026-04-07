@@ -64,6 +64,7 @@ streamlit run ui.py
 The (.env) environment file should contain OPENAI_API_KEY and TAVILY_API_KEY
 
 ## Architecture
+
 ### Functional Diagram
 ![RESUME_ATS_HLD](https://github.com/user-attachments/assets/8bb2865e-d9a4-4e74-b228-9efe2f6164a8)
 
