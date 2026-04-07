@@ -10,5 +10,5 @@ if __name__ == "__main__":
     pdfContentReader = PDFContentReader()
     # content_pypdf = read_pdf_content_with_pypdf2(file_path)
     # content_unstr = read_pdf_with_unstructured(file_path)
-    content_pdfminer = pdfReader.read_pdf_with_pdfminer(file_path)
+    content_pdfminer = pdfContentReader.read_pdf_with_pdfminer(file_path)
     x = 1

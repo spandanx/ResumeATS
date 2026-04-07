@@ -43,7 +43,7 @@ class JDExtractionAgent:
             api_key=os.getenv('OPEN_API_KEY'),
             response_format=JobDescription,
             max_retries=3,  # Retry up to 3 times on failures
-            timeout=20  # 20-second timeout per attempt
+            timeout=180  # 3-minutes timeout per attempt
         )
 
         self.complete_jd_extraction_agent = AssistantAgent(

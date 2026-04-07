@@ -31,7 +31,7 @@ class ResumeScoringAgent:
             api_key=os.getenv('OPEN_API_KEY'),
             response_format=ResumeScore,
             max_retries=3,  # Retry up to 3 times on failures
-            timeout=20  # 20-second timeout per attempt
+            timeout=180  # 3-minutes timeout per attempt
         )
 
         self.complete_resume_extraction_agent = AssistantAgent(
